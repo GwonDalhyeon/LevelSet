@@ -1,6 +1,6 @@
 clc
 clear all
-close all
+% close all
 
 l=4/2;
 [X,Y]=meshgrid(-l:4/150:l,-l:4/150:l);
@@ -34,40 +34,45 @@ contour(sign_distance,[0 0]);
 figure('units','normalized','outerposition',[0 0 1 1])
 %  hold on
 for i=0:1:399
-    i
+    
     %     TVD RK
     filename = strcat('D:\TVD RK\reinitialization set ',{' '} ,num2str(i),'.dat');
     levelset = importdata(filename{1});
     subplot(2,3,1)
-    figure
     surf(X,Y,levelset);
-%     title(strcat('time',num2str(i)));
+    %     title(strcat('time',num2str(i)));
     
     filename1 = strcat('D:\TVD RK\Error ',{' '} ,num2str(i),'.dat');
     filename2 = strcat('D:\TVD RK\L0 ',{' '} ,num2str(i),'.dat');
     filename3 = strcat('D:\TVD RK\L1 ',{' '} ,num2str(i),'.dat');
     levelset1 = importdata(filename1{1});
     l0=importdata(filename2{1});
-    l1=importdata(filename2{1});
+    l1=importdata(filename3{1});
     subplot(2,3,4)
     surf(X,Y,levelset1);
-%     title(strcat('L0 error =', num2str(l0), ', L0 error =', num2str(l1)) );
+    %     title(strcat('L0 error =', num2str(l0)));
+    %     title(strcat('L1 error =', num2str(l1)));
+    title(strcat('L0 error =', num2str(l0),', L1 error =', num2str(l1)));
+    
     
     %     FE
     filename = strcat('D:\FE\reinitialization set ',{' '} ,num2str(i),'.dat');
     levelset = importdata(filename{1});
     subplot(2,3,2)
     surf(X,Y,levelset);
-    
+    title(strcat('times =', num2str(i)));
     filename1 = strcat('D:\FE\Error ',{' '} ,num2str(i),'.dat');
     filename2 = strcat('D:\FE\L0 ',{' '} ,num2str(i),'.dat');
     filename3 = strcat('D:\FE\L1 ',{' '} ,num2str(i),'.dat');
     levelset1 = importdata(filename1{1});
     l0=importdata(filename2{1});
-    l1=importdata(filename2{1});
+    l1=importdata(filename3{1});
     subplot(2,3,5)
     surf(X,Y,levelset1);
-%     title(strcat('L0 error =', num2str(l0), ', L0 error =', num2str(l1)) );
+    %     title(strcat('L0 error =', num2str(l0)));
+    title(strcat('L1 error =', num2str(l1)));
+    title(strcat('L0 error =', num2str(l0),', L1 error =', num2str(l1)));
+    
     
     %     GS
     filename = strcat('D:\Gauss Seidel\reinitialization set ',{' '} ,num2str(i),'.dat');
@@ -80,11 +85,12 @@ for i=0:1:399
     filename3 = strcat('D:\Gauss Seidel\L1 ',{' '} ,num2str(i),'.dat');
     levelset1 = importdata(filename1{1});
     l0=importdata(filename2{1});
-    l1=importdata(filename2{1});
+    l1=importdata(filename3{1});
     subplot(2,3,6)
     surf(X,Y,levelset1);
-%     title(strcat('L0 error =', num2str(l0), ', L0 error =', num2str(l1)) );
-   
+    %     title(strcat('L0 error =', num2str(l0)));
+    %     title(strcat('L1 error =', num2str(l1)));
+    title(strcat('L0 error =', num2str(l0),' , L1 error =', num2str(l1)));
     drawnow
     
     %  clearvars levelset;

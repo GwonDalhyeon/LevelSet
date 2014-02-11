@@ -12,7 +12,7 @@ using namespace std;
 
 
 
-class level_set
+class LEVELSET
 {
 public:
 	int dimension; // inicate 1D, 2D, 3D.
@@ -25,17 +25,52 @@ public:
 
 	// Level sets.
 	double** Psi;
-	double** zero_level_set;
+	//double** zero_level_set;
 
-	level_set(double xlength, double ylength, int num_x, int num_y);
-	level_set(double xlength, double ylength, double delta_x, double delta_y);
-	level_set(const level_set& original_level_set);
-	~level_set();
+	LEVELSET(double xlength, double ylength, int num_x, int num_y);
+	LEVELSET(double xlength, double ylength, double delta_x, double delta_y);
+	LEVELSET(const LEVELSET& original_level_set);
+	LEVELSET operator=(LEVELSET orignal_LEVELSET)
+	{
+		dimension = orignal_LEVELSET.dimension; // inicate 1D, 2D, 3D.
+		num_mesh = orignal_LEVELSET.num_mesh;
+		num_xmesh =orignal_LEVELSET.num_xmesh;
+		num_ymesh = orignal_LEVELSET.num_ymesh;
+		num_step = orignal_LEVELSET.num_step;  // Decide the number of mesh , not size. And times.
+
+		x1 = orignal_LEVELSET.x1;
+		x2 = orignal_LEVELSET.x2;
+		dx = orignal_LEVELSET.dx;
+		y1 = orignal_LEVELSET.y1;
+		y2 = orignal_LEVELSET.y2;
+		dy = orignal_LEVELSET.dy; // 1 is a starting point. 2 is a ending point. and times.
+
+		side_xlength = orignal_LEVELSET.side_xlength;
+		side_ylength = orignal_LEVELSET.side_ylength; // length foreach axis. 
+
+		X = new double [num_xmesh];
+		Y = new double [num_ymesh];
+
+		Psi = new double*[num_xmesh];
+
+		for (int i = 0; i < num_xmesh; i++)
+		{
+			X[i]=orignal_LEVELSET.X[i];
+			Y[i]=orignal_LEVELSET.Y[i];		
+			Psi[i] = new double [num_ymesh];
+			for (int j = 0; j < num_ymesh; j++)
+			{
+				Psi[i][j] = orignal_LEVELSET.Psi[i][j];
+			}
+		}
+		return *this;
+	}
+	~LEVELSET();
 private:
 
 };
 
-level_set::level_set(double xlength, double ylength, int num_x, int num_y)
+LEVELSET::LEVELSET(double xlength, double ylength, int num_x, int num_y)
 {
 	side_xlength = xlength;
 	side_ylength = ylength;
@@ -58,7 +93,7 @@ level_set::level_set(double xlength, double ylength, int num_x, int num_y)
 	}
 }
 
-level_set::level_set(double xlength, double ylength, double delta_x, double delta_y)
+LEVELSET::LEVELSET(double xlength, double ylength, double delta_x, double delta_y)
 {
 	side_xlength = xlength;
 	side_ylength = ylength;
@@ -85,7 +120,7 @@ level_set::level_set(double xlength, double ylength, double delta_x, double delt
 }
 
 
-level_set :: level_set(const level_set& original_level_set)
+LEVELSET :: LEVELSET(const LEVELSET& original_level_set)
 {
 	dimension = original_level_set.dimension; // inicate 1D, 2D, 3D.
 	num_mesh = original_level_set.num_mesh;
@@ -103,29 +138,25 @@ level_set :: level_set(const level_set& original_level_set)
 	side_xlength = original_level_set.side_xlength;
 	side_ylength = original_level_set.side_ylength; // length foreach axis. 
 
-	X = new double(*original_level_set.X);
-	Y = new double(*original_level_set.Y);
-	
-	Psi = new double* [num_xmesh];
-	zero_level_set = new double* [num_xmesh];
-	
+	X = new double [num_xmesh];
+	Y = new double [num_ymesh];
+
+	Psi = new double*[num_xmesh];
+
 	for (int i = 0; i < num_xmesh; i++)
 	{
-		Psi[i] = new double[num_ymesh];
-		zero_level_set[i] = new double[num_ymesh];
-		
+		X[i]=original_level_set.X[i];
+		Y[i]=original_level_set.Y[i];		
+		Psi[i] = new double [num_ymesh];
 		for (int j = 0; j < num_ymesh; j++)
 		{
 			Psi[i][j] = original_level_set.Psi[i][j];
-			//zero_level_set[i][j] = original_level_set.zero_level_set[i][j];
 		}
 	}
-	//double** Psi;
-	//double** zero_level_set;
 
 }
 
-level_set::~level_set()
+LEVELSET::~LEVELSET()
 {
 	delete []X;
 	delete []Y;
@@ -133,7 +164,7 @@ level_set::~level_set()
 	for (int i = 0; i < num_xmesh; i++)
 	{
 		delete [] Psi[i];
-		delete [] zero_level_set[i];
+		//delete [] zero_level_set[i];
 	}
 
 }
