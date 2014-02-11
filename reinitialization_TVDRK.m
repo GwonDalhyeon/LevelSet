@@ -22,7 +22,7 @@ subplot(1,3,3)
 contour(initial,[0 0])
 
 figure
-sign_distance = importdata('C:\Users\Gwon Dalhyeon\Documents\Visual Studio 2012\Projects\Level Set\reinitialzation\reinitialzation\sign distance function.dat');
+sign_distance = importdata('C:\Users\Gwon Dalhyeon\Documents\Visual Studio 2012\Projects\Level Set\reinitialzation\reinitialzation\sign distance level set.dat');
 subplot(1,3,1)
 contour(sign_distance);
 subplot(1,3,2)

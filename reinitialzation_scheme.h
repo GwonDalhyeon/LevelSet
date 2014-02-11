@@ -217,7 +217,7 @@ void TVD_RK(LEVELSET InputLevelSet, double total_time ,double delta_t, class LEV
 		//
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		ostringstream file_name2;
-		file_name2 <<  "D:/TVD RK/reinitialization set.dat";
+		file_name2 <<  "D:/TVD RK/reinitialization set "<<t<<".dat";
 		ofstream levelset_output2(file_name2.str());
 		assert(levelset_output2.is_open());
 
