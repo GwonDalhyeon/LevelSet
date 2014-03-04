@@ -171,20 +171,6 @@ LEVELSET::~LEVELSET()
 
 
 
-class point_set
-{
-public:
-	double* pointX;
-	double* pointY;
-	//int num_point;
-	point_set();
-	point_set(LEVELSET input_level_set, int num_xmax, int num_ymax);
-	~point_set();
-
-private:
-
-};
-
 
 
 

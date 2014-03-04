@@ -252,114 +252,123 @@ tuple<double,double> derivation1y_minus(int i,int j, double** A, double delta,  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // first derivation plus function near interface
 // (difference value, delta plus)
-tuple<double,double> derivation1x_plus_subcell(int i,int j, double** A, double delta, int max_num)
+tuple<double,double> derivation1_plus_near(int i,int j, double** A, double delta, char axis, int max_num)
 {
 	double delta_plus;
 	double temp1;
 	double temp2;
 	double psi0_xxyy;
 	double discriminant;
-	double derivation;
+	double result;
 
-	if (i>0 && i<(max_num-2))
-	{
-		temp1 = A[i-1][j]-2.0*A[i][j]+A[i+1][j];
-		temp2 = A[i][j]-2.0*A[i+1][j]+A[i+2][j];
-		psi0_xxyy = minmod(temp1,temp2);
-	}
-	else
-	{
-		psi0_xxyy = 0;
-	}
+	double Aij;
 
-	// Calculate deltaX+
-	if (abs(psi0_xxyy) > 10.0*DBL_EPSILON) // almost linear case
-	{
 
-		if (i<max_num-1)
+	switch (axis)
+	{
+	case 'x' : 
+		if (i>0 && i<(max_num-2))
 		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i+1][j])*(psi0_xxyy/2.0-A[i][j]-A[i+1][j]) - 4.0*A[i][j]*A[i+1][j] ;
-			discriminant = abs(discriminant);
-			delta_plus = delta * (1.0/2.0 + (A[i][j]-A[i+1][j]-sign_func(A[i][j]-A[i+1][j])*sqrt(discriminant))/psi0_xxyy);
+			temp1 = (A[i-1][j]-2.0*A[i][j]+A[i+1][j])/(delta*delta);
+			temp2 = A[i][j]-2.0*A[i+1][j]+A[i+2][j];
+			psi0_xxyy = minmod(temp1,temp2);
 		}
 		else
 		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
-			discriminant = abs(discriminant);
-			delta_plus = delta * (1.0/2.0);
+			psi0_xxyy = 0;
 		}
-	}
-	else // non linear case
-	{
-		if (i<max_num-1)
-		{
-			delta_plus = delta * A[i][j]/(A[i][j]-A[i+1][j]);
 
+		// Calculate deltaX+
+		if (psi0_xxyy > DBL_EPSILON) // almost linear case
+		{
+
+			if (i<max_num-1)
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i+1][j])*(psi0_xxyy/2.0-A[i][j]-A[i+1][j]) - 4.0*A[i][j]*A[i+1][j] ;
+				discriminant = abs(discriminant);
+				delta_plus = delta * (1.0/2.0 + A[i][j]-A[i+1][j]-sign_func(A[i][j]-A[i+1][j])*sqrt(discriminant));
+			}
+			else
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
+				discriminant = abs(discriminant);
+				delta_plus = delta * (1.0/2.0 + A[i][j]-A[i][j]-sign_func(A[i][j]-A[i][j])*sqrt(discriminant));
+			}
+		}
+		else // non linear case
+		{
+			if (i<max_num-1)
+			{
+				delta_plus = delta * A[i][j]/(A[i][j]-A[i+1][j]);
+
+			}
+			else
+			{
+				delta_plus = delta * A[i][j]/(2.0*A[i][j]);
+			}
+		}
+
+		// calculate D+xPSI_ij
+		Aij=A[i][j];
+		result = -A[i][j]/delta_plus - delta_plus/2.0*minmod(derivation2x(i,j,A,delta,max_num),derivation2x(i+1,j,A,delta,max_num));
+		return make_tuple(result, delta_plus);
+		break;
+
+
+
+	case 'y' : 
+		if (j>0 && j<max_num-2)
+		{
+			temp1 = (A[i][j-1]-2.0*A[i][j]+A[i][j+1])/(delta*delta);
+			temp2 = A[i][j]-2.0*A[i][j+1]+A[i][j+2];
+			psi0_xxyy = minmod(temp1, temp2);
 		}
 		else
 		{
-			delta_plus = delta * (1.0/2.0);
+			psi0_xxyy = 0;
 		}
-	}
 
-	// calculate D+xPSI_ij
-	derivation = -A[i][j]/delta_plus - delta_plus/2.0*minmod(derivation2x(i,j,A,delta,max_num),derivation2x(i+1,j,A,delta,max_num));
-	return make_tuple(derivation, delta_plus);
-}
-
-
-tuple<double,double> derivation1y_plus_subcell(int i,int j, double** A, double delta, int max_num)
-{
-	double delta_plus;
-	double temp1;
-	double temp2;
-	double psi0_xxyy;
-	double discriminant;
-	double derivation;
-
-	if (j>0 && j<max_num-2)
-	{
-		temp1 = A[i][j-1]-2.0*A[i][j]+A[i][j+1];
-		temp2 = A[i][j]-2.0*A[i][j+1]+A[i][j+2];
-		psi0_xxyy = minmod(temp1, temp2);
-	}
-	else
-	{
-		psi0_xxyy = 0;
-	}
-
-	// Calculate deltaX+
-	if (abs(psi0_xxyy) > 10.0*DBL_EPSILON) // almost linear case
-	{
-
-		if (j<max_num-1)
+		// Calculate deltaX+
+		if (psi0_xxyy > DBL_EPSILON) // almost linear case
 		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j+1])*(psi0_xxyy/2.0-A[i][j]-A[i][j+1]) - 4.0*A[i][j]*A[i][j+1] ;
-			discriminant = abs(discriminant);
-			delta_plus = delta * (1.0/2.0 + (A[i][j]-A[i][j+1]-sign_func(A[i][j]-A[i][j+1])*sqrt(discriminant))/psi0_xxyy);
+
+			if (j<max_num-1)
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j+1])*(psi0_xxyy/2.0-A[i][j]-A[i][j+1]) - 4.0*A[i][j]*A[i][j+1] ;
+				discriminant = abs(discriminant);
+				delta_plus = delta * (1.0/2.0 + A[i][j]-A[i][j+1]-sign_func(A[i][j]-A[i][j+1])*sqrt(discriminant));
+			}
+			else
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
+				discriminant = abs(discriminant);
+				delta_plus = delta * (1.0/2.0 + A[i][j]-A[i][j]-sign_func(A[i][j]-A[i][j])*sqrt(discriminant));
+			}
 		}
-		else
+		else // non linear case
 		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
-			discriminant = abs(discriminant);
-			delta_plus = delta * (1.0/2.0);
+			if (j<max_num-1)
+			{
+				delta_plus = delta * A[i][j]/(A[i][j]-A[i][j+1]);
+			}
+			else
+			{
+				delta_plus = delta * A[i][j]/(2.0*A[i][j]);
+			}
 		}
-	}
-	else // non linear case
-	{
-		if (j<max_num-1)
-		{
-			delta_plus = delta * A[i][j]/(A[i][j]-A[i][j+1]);
-		}
-		else
-		{
-			delta_plus = delta *1.0/2.0;
-		}
+
+		// calculate D+xPSI_ij
+		Aij=A[i][j];
+		result = -A[i][j]/delta_plus - delta_plus/2.0*minmod(derivation2y(i,j,A,delta,max_num),derivation2y(i,j+1,A,delta,max_num));
+		return make_tuple(result, delta_plus);
+		break;
+
+
+	default : cout<<"axis should be 'x' or 'y'."<<"\n";
+		break;
 	}
 
-	// calculate D+xPSI_ij
-	derivation = -A[i][j]/delta_plus - delta_plus/2.0*minmod(derivation2y(i,j,A,delta,max_num),derivation2y(i,j+1,A,delta,max_num));
-	return make_tuple(derivation, delta_plus);
+	//return result;
 }
 
 
@@ -375,116 +384,120 @@ tuple<double,double> derivation1y_plus_subcell(int i,int j, double** A, double d
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // first derivation minus function
 // (difference value, delta minus)
-tuple<double,double> derivation1x_minus_subcell(int i,int j, double** A, double delta, int max_num)
+tuple<double,double> derivation1_minus_near(int i,int j, double** A, double delta, char axis, int max_num)
 {
 	double delta_minus;
 	double temp1;
 	double temp2;
 	double psi0_xxyy;
 	double discriminant;
-	double derivation;
+	double result;
+	double Aij;
 
-	if (i>1 && i<max_num-1)
-	{
-		temp1 = A[i-1][j]-2.0*A[i][j]+A[i+1][j];
-		temp2 = A[i][j]-2.0*A[i-1][j]+A[i-2][j];
-		psi0_xxyy = minmod(temp1,temp2);
-	}
-	else
-	{
-		psi0_xxyy = 0;
-	}
 
-	// Calculate deltaX+
-	if (abs(psi0_xxyy) > 10.0*DBL_EPSILON) // almost linear case
+	switch (axis)
 	{
-
-		if (i>0)
+	case 'x' : 
+		if (i>1 && i<max_num-1)
 		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i-1][j])*(psi0_xxyy/2.0-A[i][j]-A[i-1][j]) - 4.0*A[i][j]*A[i-1][j] ;
-			discriminant = abs(discriminant);
-			delta_minus = delta * (1.0/2.0 + (A[i][j]-A[i-1][j]-sign_func(A[i][j]-A[i-1][j])*sqrt(discriminant))/psi0_xxyy);
+			temp1 = (A[i-1][j]-2.0*A[i][j]+A[i+1][j])/(delta*delta);
+			temp2 = A[i][j]-2.0*A[i-1][j]+A[i-2][j];
+			psi0_xxyy = minmod(temp1,temp2);
 		}
 		else
 		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
-			discriminant = abs(discriminant);
-			delta_minus = delta * (1.0/2.0 );
+			psi0_xxyy = 0;
 		}
-	}
-	else // non linear case
-	{
-		if (i>0)
+
+		// Calculate deltaX+
+		if (psi0_xxyy > DBL_EPSILON) // almost linear case
 		{
-			delta_minus = delta * A[i][j]/(A[i][j]-A[i-1][j]);
+
+			if (i>0)
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i-1][j])*(psi0_xxyy/2.0-A[i][j]-A[i-1][j]) - 4.0*A[i][j]*A[i-1][j] ;
+				discriminant = abs(discriminant);
+				delta_minus = delta * (1.0/2.0 + A[i][j]-A[i-1][j]-sign_func(A[i][j]-A[i-1][j])*sqrt(discriminant));
+			}
+			else
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
+				discriminant = abs(discriminant);
+				delta_minus = delta * (1.0/2.0 + A[i][j]-A[i][j]-sign_func(A[i][j]-A[i][j])*sqrt(discriminant));
+			}
+		}
+		else // non linear case
+		{
+			if (i>0)
+			{
+				delta_minus = delta * A[i][j]/(A[i][j]-A[i-1][j]);
+			}
+			else
+			{
+				delta_minus = delta * A[i][j]/(2.0*A[i][j]);
+			}
+		}
+
+		// calculate D+xPSI_ij
+		Aij=A[i][j];
+		result = A[i][j]/delta_minus + delta_minus/2.0*minmod(derivation2x(i,j,A,delta,max_num),derivation2x(i-1,j,A,delta,max_num));
+		return make_tuple(result, delta_minus);
+		break;
+
+
+
+	case 'y' : 
+		if (j>1 && j<max_num-1)
+		{
+			temp1 = (A[i][j-1]-2.0*A[i][j]+A[i][j+1])/(delta*delta);
+			temp2 = A[i][j]-2.0*A[i][j-1]+A[i][j-2];
+			psi0_xxyy = minmod(temp1, temp2);
 		}
 		else
 		{
-			delta_minus = delta * 1.0/2.0;
+			psi0_xxyy = 0;
 		}
+
+		// Calculate deltaX+
+		if (psi0_xxyy > DBL_EPSILON) // almost linear case
+		{
+
+			if (j>0)
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j-1])*(psi0_xxyy/2.0-A[i][j]-A[i][j-1]) - 4.0*A[i][j]*A[i][j-1] ;
+				discriminant = abs(discriminant);
+				delta_minus = delta * (1.0/2.0 + A[i][j]-A[i][j-1]-sign_func(A[i][j]-A[i][j-1])*sqrt(discriminant));
+			}
+			else
+			{
+				discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
+				discriminant = abs(discriminant);
+				delta_minus = delta * (1.0/2.0 + A[i][j]-A[i][j]-sign_func(A[i][j]-A[i][j])*sqrt(discriminant));
+			}
+		}
+		else // non linear case
+		{
+			if (j>0)
+			{
+				delta_minus = delta * A[i][j]/(A[i][j]-A[i][j-1]);
+			}
+			else
+			{
+				delta_minus = delta * A[i][j]/(2.0*A[i][j]);
+			}
+		}
+
+		// calculate D+xPSI_ij
+		Aij=A[i][j];
+		result = -A[i][j]/delta_minus - delta_minus/2.0*minmod(derivation2y(i,j,A,delta,max_num),derivation2y(i,j-1,A,delta,max_num));
+
+		return make_tuple(result, delta_minus);
+		break;
+
+
+	default : cout<<"axis should be 'x' or 'y'."<<"\n";
+		break;
 	}
 
-	// calculate D+xPSI_ij
 
-	derivation = A[i][j]/delta_minus + delta_minus/2.0*minmod(derivation2x(i,j,A,delta,max_num),derivation2x(i-1,j,A,delta,max_num));
-	return make_tuple(derivation, delta_minus);
 }
-
-
-tuple<double,double> derivation1y_minus_subcell(int i,int j, double** A, double delta, int max_num)
-{
-	double delta_minus;
-	double temp1;
-	double temp2;
-	double psi0_xxyy;
-	double discriminant;
-	double derivation;
-	if (j>1 && j<max_num-1)
-	{
-		temp1 = A[i][j-1]-2.0*A[i][j]+A[i][j+1];
-		temp2 = A[i][j]-2.0*A[i][j-1]+A[i][j-2];
-		psi0_xxyy = minmod(temp1, temp2);
-	}
-	else
-	{
-		psi0_xxyy = 0;
-	}
-
-	// Calculate deltaX+
-	if (abs(psi0_xxyy) > 10.0*DBL_EPSILON) // almost linear case
-	{
-
-		if (j>0)
-		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j-1])*(psi0_xxyy/2.0-A[i][j]-A[i][j-1]) - 4.0*A[i][j]*A[i][j-1] ;
-			discriminant = abs(discriminant);
-			delta_minus = delta * (1.0/2.0 + (A[i][j]-A[i][j-1]-sign_func(A[i][j]-A[i][j-1])*sqrt(discriminant))/psi0_xxyy);
-		}
-		else
-		{
-			discriminant = (psi0_xxyy/2.0-A[i][j]-A[i][j])*(psi0_xxyy/2.0-A[i][j]-A[i][j]) - 4.0*A[i][j]*A[i][j] ;
-			discriminant = abs(discriminant);
-			delta_minus = delta * (1.0/2.0);
-		}
-	}
-	else // non linear case
-	{
-		if (j>0)
-		{
-			delta_minus = delta * A[i][j]/(A[i][j]-A[i][j-1]);
-		}
-		else
-		{
-			delta_minus = delta * 1.0/2.0;
-		}
-	}
-
-	// calculate D+xPSI_ij
-
-	derivation = A[i][j]/delta_minus - delta_minus/2.0*minmod(derivation2y(i,j,A,delta,max_num),derivation2y(i,j-1,A,delta,max_num));
-
-	return make_tuple(derivation, delta_minus);
-
-}
-
-
