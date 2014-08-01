@@ -11,6 +11,8 @@ public:
 	Phi1D* Phi0;
 	Phi1D* Phi1;
 
+
+
 	Shape1D();
 	Shape1D(double inputX0, double inputX1, int inputXPointNum, double inputT, double inputdeltaT);
 	Shape1D(double inputX0, double inputX1, double inputDeltaX, double inputT, double inputdeltaT);
@@ -55,7 +57,7 @@ Shape1D::Shape1D(double inputX0, double inputX1, double inputDeltaX, double inpu
 	X0 = inputX0;
 	X1 = inputX1;
 
-	xPointNum = floor((inputX1 - inputX0)/inputDeltaX);
+	xPointNum = (int)floor((inputX1 - inputX0)/inputDeltaX);
 
 	Phi0 = new Phi1D();
 	Phi0->x = inputX0;
@@ -86,6 +88,8 @@ public:
 	Phi2D* PhiHead;
 	Phi2D* PhiTail;
 
+	double** savedPhi;
+
 	Shape2D(double inputX0, double inputX1, int inputXPointNum, double inputY0, double inputY1, int inputYPointNum, double inputT, double inputdeltaT);
 	Shape2D(double inputX0, double inputX1, double inputDeltaX, double inputY0, double inputY1, double inputDeltaY, double inputT, double inputdeltaT);
 	~Shape2D();
@@ -94,6 +98,9 @@ public:
 	void connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex);
 	Phi2D* findPoint(Phi2D* phiHead, int inputXIndex, int inputYIndex);
 	bool findPointBool(Phi2D* phiHead, int inputXIndex, int inputYIndex);
+	void savingPhi(int timeIndex);
+	void reinitialTVDRK3();
+	void propagatingTVDRK3();
 private:
 
 };
@@ -110,12 +117,21 @@ Shape2D::Shape2D(double inputX0, double inputX1, int inputXPointNum, double inpu
 	Y0 = inputY0;
 	Y1 = inputY1;
 
-	xPointNum = inputXPointNum;
-	yPointNum = inputYPointNum;
+	xPointNum = inputXPointNum+1;
+	yPointNum = inputYPointNum+1;
+	numPoint =0;
+	savedPhi = new double* [xPointNum];
+
+	for (int i = 0; i < xPointNum; i++)
+	{
+		savedPhi[i] = new double[yPointNum];
+	}
 
 	PhiHead    = new Phi2D();
 	PhiHead->x = inputX0;
 	PhiHead->y = inputY0;
+	PhiHead->xIndex = 0;
+	PhiHead->yIndex = 0;
 	PhiTail    = NULL;
 }
 
@@ -132,11 +148,22 @@ Shape2D::Shape2D(double inputX0, double inputX1, double inputDeltaX, double inpu
 	Y0 = inputY0;
 	Y1 = inputY1;
 
-	xPointNum = floor((inputX1 - inputX0)/inputDeltaX);
+	xPointNum = (int)floor((inputX1 - inputX0)/inputDeltaX)+1;
+	yPointNum = (int)floor((inputY1 - inputY0)/inputDeltaY)+1;
+	numPoint =0;
+	savedPhi = new double* [xPointNum];
+
+	for (int i = 0; i < xPointNum; i++)
+	{
+		savedPhi[i] = new double[yPointNum];
+	}
+
 
 	PhiHead    = new Phi2D();
 	PhiHead->x = inputX0;
 	PhiHead->y = inputY0;
+	PhiHead->xIndex = 0;
+	PhiHead->yIndex = 0;
 	PhiTail    = NULL;
 
 }
@@ -148,6 +175,12 @@ Shape2D::~Shape2D()
 	{
 		deleteAllPhi(PhiTail);
 	}
+
+	for (int i = 0; i < xPointNum; i++)
+	{
+		delete[] savedPhi[i];
+	}
+	delete[] savedPhi;
 }
 
 Phi1D* Shape1D::addPhi(double inputX, Phi1D* leftPhi, Phi1D* rightPhi)
@@ -192,7 +225,7 @@ Phi2D* Shape2D::findPoint(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 
 	while (tempPhi!=NULL)
 	{
-		if (abs(tempPhi->x - (double)inputXIndex*deltaX)<DBL_EPSILON && abs(tempPhi->y - (double)inputYIndex*deltaY)<DBL_EPSILON)
+		if (abs(tempPhi->x - (double)(inputXIndex*deltaX+X0))<DBL_EPSILON && abs(tempPhi->y - (double)(inputYIndex*deltaY+Y0))<DBL_EPSILON)
 		{
 			return tempPhi;
 		}
@@ -207,7 +240,7 @@ bool Shape2D::findPointBool(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 
 	while (tempPhi!=NULL)
 	{
-		if (abs(tempPhi->x - (double)inputXIndex*deltaX)<DBL_EPSILON && abs(tempPhi->y - (double)inputYIndex*deltaY)<DBL_EPSILON)
+		if (abs(tempPhi->x - (double)(inputXIndex*deltaX+X0))<DBL_EPSILON && abs(tempPhi->y - (double)(inputYIndex*deltaY+Y0))<DBL_EPSILON)
 		{
 			return true;
 		}
@@ -251,12 +284,15 @@ Phi2D* Shape2D::addPhi(double inputX, double inputY, Phi2D* leftPhi, Phi2D* righ
 	}
 	returnPhi->x = inputX;
 	returnPhi->y = inputY;
-	//numPoint = numPoint+1;
+
+	//returnPhi->xIndex = (int)floor( (inputX+X0)/deltaX+DBL_EPSILON);
+	//returnPhi->yIndex = (int)floor( (inputY+Y0)/deltaY+DBL_EPSILON);
+	numPoint = numPoint+1;
 
 	//size_t currentSize = getPeakRSS();
-	//	size_t peakSize = getCurrentRSS();
-	//	cout <<numPoint+1 << "\n";
-	//	cout << currentSize << "   " << peakSize << endl;
+	//size_t peakSize = getCurrentRSS();
+	//cout <<numPoint+1 << "\n";
+	//cout << currentSize << "   " << peakSize << endl;
 	return returnPhi;
 }
 
@@ -271,10 +307,13 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 	else if (inputPhi->PhiRight == NULL && !findPointBool(PhiHead, inputXIndex+1, inputYIndex))
 	{
 		Phi2D* newRightPhi   = NULL;
-		newRightPhi   = addPhi((double)(inputXIndex+1)*deltaX, (double)inputYIndex*deltaY, inputPhi, NULL, NULL, NULL);
+		newRightPhi   = addPhi((double)(inputXIndex+1)*deltaX+X0, (double)inputYIndex*deltaY+Y0, inputPhi, NULL, NULL, NULL);
 
 		if (newRightPhi != NULL)
 		{
+			newRightPhi->xIndex = inputXIndex+1;
+			newRightPhi->yIndex = inputYIndex;
+
 			Phi2D* oldPhiTail;
 			oldPhiTail = PhiTail;
 
@@ -294,7 +333,7 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 			connectingPhi(newRightPhi, inputXIndex+1, inputYIndex);
 		}
 	}
-	
+
 
 	if (findPointBool(PhiHead, inputXIndex, inputYIndex+1))
 	{
@@ -303,10 +342,13 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 	else if (inputPhi->PhiTop == NULL && !findPointBool(PhiHead, inputXIndex, inputYIndex+1))
 	{
 		Phi2D* newTopPhi     = NULL;
-		newTopPhi     = addPhi((double)(inputXIndex)*deltaX, (double)(inputYIndex+1)*deltaY, NULL, NULL, inputPhi, NULL);
+		newTopPhi     = addPhi((double)(inputXIndex)*deltaX+X0, (double)(inputYIndex+1)*deltaY+Y0, NULL, NULL, inputPhi, NULL);
 
 		if (newTopPhi != NULL)
 		{
+			newTopPhi->xIndex = inputXIndex;
+			newTopPhi->yIndex = inputYIndex+1;
+
 			Phi2D* oldPhiTail;
 			oldPhiTail = PhiTail;
 
@@ -326,7 +368,7 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 			connectingPhi(newTopPhi, inputXIndex, inputYIndex+1);
 		}
 	}
-	
+
 
 
 	if (findPointBool(PhiHead, inputXIndex-1, inputYIndex))
@@ -336,10 +378,13 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 	else if (inputPhi->PhiLeft == NULL && !findPointBool(PhiHead, inputXIndex-1, inputYIndex))
 	{
 		Phi2D* newLeftPhi    = NULL;
-		newLeftPhi    = addPhi((double)(inputXIndex-1)*deltaX, (double)inputYIndex*deltaY, NULL, inputPhi, NULL, NULL);
+		newLeftPhi    = addPhi((double)(inputXIndex-1)*deltaX+X0, (double)inputYIndex*deltaY+Y0, NULL, inputPhi, NULL, NULL);
 
 		if (newLeftPhi != NULL)
 		{
+			newLeftPhi->xIndex = inputXIndex-1;
+			newLeftPhi->yIndex = inputYIndex;
+
 			Phi2D* oldPhiTail;
 			oldPhiTail = PhiTail;
 
@@ -359,19 +404,21 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 			connectingPhi(newLeftPhi, inputXIndex-1, inputYIndex);
 		}
 	}
-	
+
 
 
 	if (findPointBool(PhiHead, inputXIndex, inputYIndex-1))
 	{
-		inputPhi->PhiBottom = findPoint(PhiHead,inputXIndex-1,inputYIndex);
+		inputPhi->PhiBottom = findPoint(PhiHead,inputXIndex,inputYIndex-1);
 	}
 	else if (inputPhi->PhiBottom == NULL && !findPointBool(PhiHead, inputXIndex, inputYIndex-1))
 	{
 		Phi2D* newBottomPhi  = NULL;
-		newBottomPhi  = addPhi((double)(inputXIndex)*deltaX, (double)(inputYIndex-1)*deltaY, NULL, NULL, NULL, inputPhi);
+		newBottomPhi  = addPhi((double)(inputXIndex)*deltaX+X0, (double)(inputYIndex-1)*deltaY+X0, NULL, NULL, NULL, inputPhi);
 		if (newBottomPhi != NULL)
 		{
+			newBottomPhi->xIndex = inputXIndex;
+			newBottomPhi->yIndex = inputYIndex-1;
 
 			Phi2D* oldPhiTail;
 			oldPhiTail = PhiTail;
@@ -391,123 +438,29 @@ void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
 
 			connectingPhi(newBottomPhi, inputXIndex, inputYIndex-1);
 		}
-
 	}
-	
-
 }
 
 
+void Shape2D::savingPhi(int timeIndex)
+{
+	Phi2D* tempPhi = PhiHead;
+	while (tempPhi!=NULL)
+	{
+		savedPhi[tempPhi->xIndex][tempPhi->yIndex]=tempPhi->phi;
+		tempPhi = tempPhi->PhiNext;
+	}
 
+	ofstream phiData;
+	phiData.open("D:\Data/phi"+to_string(timeIndex)+".txt");
 
-//void Shape2D::connectingPhi(Phi2D* inputPhi, int inputXIndex, int inputYIndex)
-//{
-//
-//	Phi2D* newRightPhi   = NULL;
-//	Phi2D* newLeftPhi    = NULL;
-//	Phi2D* newTopPhi     = NULL;
-//	Phi2D* newBottomPhi  = NULL;
-//
-//	if (inputPhi->PhiRight == NULL)
-//	{
-//		newRightPhi   = addPhi((double)(inputXIndex+1)*deltaX, (double)inputYIndex*deltaY, inputPhi, NULL, NULL, NULL);
-//	}
-//	if (inputPhi->PhiLeft == NULL)
-//	{
-//		newLeftPhi    = addPhi((double)(inputXIndex-1)*deltaX, (double)inputYIndex*deltaY, NULL, inputPhi, NULL, NULL);
-//	}
-//	if (inputPhi->PhiTop == NULL)
-//	{
-//		newTopPhi     = addPhi((double)(inputXIndex)*deltaX, (double)(inputYIndex+1)*deltaY, NULL, NULL, inputPhi, NULL);
-//	}
-//	if (inputPhi->PhiBottom == NULL)
-//	{
-//		newBottomPhi  = addPhi((double)(inputXIndex)*deltaX, (double)(inputYIndex-1)*deltaY, NULL, NULL, NULL, inputPhi);
-//	}
-//
-//
-//	if (newRightPhi != NULL && !findPointBool(PhiHead, inputXIndex+1, inputYIndex))
-//	{
-//		
-//			Phi2D* oldPhiTail;
-//			oldPhiTail = PhiTail;
-//
-//			if (oldPhiTail != NULL)
-//			{
-//				newRightPhi->PhiBefore = oldPhiTail;
-//				oldPhiTail->PhiNext = newRightPhi;
-//				PhiTail = newRightPhi;
-//			}
-//			else
-//			{
-//				PhiTail = newRightPhi;
-//				PhiHead->PhiNext = newRightPhi;
-//				PhiTail->PhiBefore = PhiHead;
-//			}
-//
-//			connectingPhi(newRightPhi, inputXIndex+1, inputYIndex);
-//	}
-//
-//	if (newTopPhi != NULL && !findPointBool(PhiHead, inputXIndex, inputYIndex+1))
-//	{
-//			Phi2D* oldPhiTail;
-//			oldPhiTail = PhiTail;
-//
-//			if (oldPhiTail != NULL)
-//			{
-//				newTopPhi->PhiBefore = oldPhiTail;
-//				oldPhiTail->PhiNext = newTopPhi;
-//				PhiTail = newTopPhi;
-//			}
-//			else
-//			{
-//				PhiTail = newTopPhi;
-//				PhiHead->PhiNext = newTopPhi;
-//				PhiTail->PhiBefore = PhiHead;
-//			}
-//
-//			connectingPhi(newTopPhi, inputXIndex, inputYIndex+1);
-//	}
-//
-//	if (newLeftPhi != NULL && !findPointBool(PhiHead, inputXIndex-1, inputYIndex))
-//	{
-//			Phi2D* oldPhiTail;
-//			oldPhiTail = PhiTail;
-//
-//			if (oldPhiTail != NULL)
-//			{
-//				newLeftPhi->PhiBefore = oldPhiTail;
-//				oldPhiTail->PhiNext = newLeftPhi;
-//				PhiTail = newLeftPhi;
-//			}
-//			else
-//			{
-//				PhiTail = newLeftPhi;
-//				PhiHead->PhiNext = newLeftPhi;
-//				PhiTail->PhiBefore = PhiHead;
-//			}
-//
-//			connectingPhi(newLeftPhi, inputXIndex-1, inputYIndex);
-//	}
-//
-//	if (newBottomPhi != NULL && !findPointBool(PhiHead, inputXIndex, inputYIndex-1))
-//	{
-//			Phi2D* oldPhiTail;
-//			oldPhiTail = PhiTail;
-//
-//			if (oldPhiTail != NULL)
-//			{
-//				newBottomPhi->PhiBefore = oldPhiTail;
-//				oldPhiTail->PhiNext = newBottomPhi;
-//				PhiTail = newBottomPhi;
-//			}
-//			else
-//			{
-//				PhiTail = newBottomPhi;
-//				PhiHead->PhiNext = newBottomPhi;
-//				PhiTail->PhiBefore = PhiHead;
-//			}
-//
-//			connectingPhi(newBottomPhi, inputXIndex, inputYIndex-1);
-//		}
-//}
+	for (int i = 0; i < xPointNum; i++)
+	{
+		for (int j = 0; j < yPointNum; j++)
+		{
+			phiData<<savedPhi[i][j]<<" ";
+		}
+		phiData<<endl;
+	}
+	phiData.close();
+}

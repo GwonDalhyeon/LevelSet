@@ -19,7 +19,12 @@ struct Phi2D
 {
 	double x, y;
 	double phi;
+	double tempPhiValue;
+	double originPhi;
 
+	double k1,k2,k3;
+
+	int xIndex, yIndex;
 	struct Phi2D* PhiLeft;
 	struct Phi2D* PhiRight;
 	struct Phi2D* PhiTop;

@@ -51,13 +51,13 @@ double dxxPhi(Phi1D* inputPhi)
 	{
 		double dxLeft  = inputPhi->x - inputPhi->PhiLeft->x;
 		double dxRight = inputPhi->PhiRight->x - inputPhi->x;
-		return (inputPhi->phi - inputPhi->PhiLeft->phi) / dxLeft *2.0/(dxLeft + dxRight) + (inputPhi->PhiRight->phi - inputPhi->phi) / dxRight *2.0/(dxLeft + dxRight);
+		return -(inputPhi->phi - inputPhi->PhiLeft->phi) / dxLeft *2.0/(dxLeft + dxRight) + (inputPhi->PhiRight->phi - inputPhi->phi) / dxRight *2.0/(dxLeft + dxRight);
 	}
 }
 
 double dxMinusPhi(Phi1D* inputPhi)
 {
-	if ((inputPhi->PhiLeft == NULL) && (inputPhi == NULL))
+	if ((inputPhi->PhiLeft == NULL) || (inputPhi == NULL))
 	{
 		return 0.0;
 	}
@@ -107,6 +107,11 @@ double dxPhi(Phi1D* inputPhi)
 	}
 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////
+////////////////
+////////////////    2D
+////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 double dxxPhi(Phi2D* inputPhi)
 {
@@ -122,13 +127,13 @@ double dxxPhi(Phi2D* inputPhi)
 	{
 		double dxLeft  = inputPhi->x - inputPhi->PhiLeft->x;
 		double dxRight = inputPhi->PhiRight->x - inputPhi->x;
-		return (inputPhi->phi - inputPhi->PhiLeft->phi) / dxLeft *2.0/(dxLeft + dxRight) + (inputPhi->PhiRight->phi - inputPhi->phi) / dxRight *2.0/(dxLeft + dxRight);
+		return (inputPhi->PhiRight->phi - inputPhi->phi) / dxRight *2.0/(dxLeft + dxRight) - (inputPhi->phi - inputPhi->PhiLeft->phi) / dxLeft *2.0/(dxLeft + dxRight);
 	}
 }
 
 double dxMinusPhi(Phi2D* inputPhi)
 {
-	if ((inputPhi->PhiLeft == NULL) && (inputPhi == NULL))
+	if ((inputPhi->PhiLeft == NULL) || (inputPhi == NULL))
 	{
 		return 0.0;
 	}
@@ -193,7 +198,7 @@ double dyyPhi(Phi2D* inputPhi)
 	{
 		double dyBottom  = inputPhi->y - inputPhi->PhiBottom->y;
 		double dyTop     = inputPhi->PhiTop->y - inputPhi->y;
-		return (inputPhi->phi - inputPhi->PhiBottom->phi) / dyBottom *2.0/(dyBottom + dyTop) + (inputPhi->PhiTop->phi - inputPhi->phi) / dyTop *2.0/(dyTop + dyBottom);
+		return (inputPhi->PhiTop->phi - inputPhi->phi) / dyTop *2.0/(dyTop + dyBottom) - (inputPhi->phi - inputPhi->PhiBottom->phi) / dyBottom *2.0/(dyBottom + dyTop);
 	}
 }
 
@@ -249,19 +254,19 @@ double dyPhi(Phi2D* inputPhi)
 	}
 }
 
-double dxyPhi(Phi2D* inputPhi)
-{
-	double dx = inputPhi->PhiRight->x - inputPhi->PhiLeft->x;
-	double dy = inputPhi->PhiTop->y - inputPhi->PhiBottom->y;
-	return (inputPhi->PhiRight->PhiTop->phi - inputPhi->PhiRight->PhiBottom->phi - inputPhi->PhiLeft->PhiTop->phi - inputPhi->PhiLeft->PhiBottom->phi)/(4.0*dx*dy);
-}
+//double dxyPhi(Phi2D* inputPhi)
+//{
+//	double dx = inputPhi->PhiRight->x - inputPhi->PhiLeft->x;
+//	double dy = inputPhi->PhiTop->y - inputPhi->PhiBottom->y;
+//	return (inputPhi->PhiRight->PhiTop->phi - inputPhi->PhiRight->PhiBottom->phi - inputPhi->PhiLeft->PhiTop->phi - inputPhi->PhiLeft->PhiBottom->phi)/(4.0*dx*dy);
+//}
 
 
 double wenoApproximationXMinus(Phi1D* inputPhi)
 {
 	double v1; double v2; double v3; double v4; double v5;
 
-	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft->PhiLeft == NULL)
+	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight == NULL || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft->PhiLeft == NULL)
 	{
 		return dxMinusPhi(inputPhi);
 	}
@@ -278,9 +283,9 @@ double wenoApproximationXMinus(Phi1D* inputPhi)
 
 	double eps = 1e-6;
 
-	double a1 = 1.0/10.0 * 1.0/((eps + s1)*(eps + s1));
-	double a2 = 6.0/10.0 * 1.0/((eps + s2)*(eps + s2));
-	double a3 = 3.0/10.0 * 1.0/((eps + s3)*(eps + s3));
+	double a1 = 1.0/10.0 * 1.0/((DBL_EPSILON + s1)*(DBL_EPSILON + s1));
+	double a2 = 6.0/10.0 * 1.0/((DBL_EPSILON + s2)*(DBL_EPSILON + s2));
+	double a3 = 3.0/10.0 * 1.0/((DBL_EPSILON + s3)*(DBL_EPSILON + s3));
 	double w1 = a1/(a1+a2+a3);
 	double w2 = a2/(a1+a2+a3);
 	double w3 = a3/(a1+a2+a3);
@@ -294,7 +299,7 @@ double wenoApproximationXPlus(Phi1D* inputPhi)
 {
 	double v1; double v2; double v3; double v4; double v5;
 
-	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight || inputPhi->PhiRight->PhiRight->PhiRight == NULL || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL)
+	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight == NULL || inputPhi->PhiRight->PhiRight->PhiRight == NULL || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL)
 	{
 		return dxPlusPhi(inputPhi);
 	}
@@ -311,9 +316,9 @@ double wenoApproximationXPlus(Phi1D* inputPhi)
 
 	double eps = 1e-6;
 
-	double a1 = 1.0/10.0 * 1.0/((eps + s1)*(eps + s1));
-	double a2 = 6.0/10.0 * 1.0/((eps + s2)*(eps + s2));
-	double a3 = 3.0/10.0 * 1.0/((eps + s3)*(eps + s3));
+	double a1 = 1.0/10.0 * 1.0/((DBL_EPSILON + s1)*(DBL_EPSILON + s1));
+	double a2 = 6.0/10.0 * 1.0/((DBL_EPSILON + s2)*(DBL_EPSILON + s2));
+	double a3 = 3.0/10.0 * 1.0/((DBL_EPSILON + s3)*(DBL_EPSILON + s3));
 	double w1 = a1/(a1+a2+a3);
 	double w2 = a2/(a1+a2+a3);
 	double w3 = a3/(a1+a2+a3);
@@ -327,7 +332,7 @@ double wenoApproximationXMinus(Phi2D* inputPhi)
 {
 	double v1; double v2; double v3; double v4; double v5;
 
-	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft->PhiLeft == NULL)
+	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight == NULL || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft->PhiLeft == NULL)
 	{
 		return dxMinusPhi(inputPhi);
 	}
@@ -344,9 +349,9 @@ double wenoApproximationXMinus(Phi2D* inputPhi)
 
 	double eps = 1e-6;
 
-	double a1 = 1.0/10.0 * 1.0/((eps + s1)*(eps + s1));
-	double a2 = 6.0/10.0 * 1.0/((eps + s2)*(eps + s2));
-	double a3 = 3.0/10.0 * 1.0/((eps + s3)*(eps + s3));
+	double a1 = 1.0/10.0 * 1.0/((DBL_EPSILON + s1)*(DBL_EPSILON + s1));
+	double a2 = 6.0/10.0 * 1.0/((DBL_EPSILON + s2)*(DBL_EPSILON + s2));
+	double a3 = 3.0/10.0 * 1.0/((DBL_EPSILON + s3)*(DBL_EPSILON + s3));
 	double w1 = a1/(a1+a2+a3);
 	double w2 = a2/(a1+a2+a3);
 	double w3 = a3/(a1+a2+a3);
@@ -359,7 +364,7 @@ double wenoApproximationXPlus(Phi2D* inputPhi)
 {
 	double v1; double v2; double v3; double v4; double v5;
 
-	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight || inputPhi->PhiRight->PhiRight->PhiRight == NULL || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL)
+	if (inputPhi == NULL || inputPhi->PhiRight == NULL || inputPhi->PhiRight->PhiRight == NULL || inputPhi->PhiRight->PhiRight->PhiRight == NULL || inputPhi->PhiLeft == NULL || inputPhi->PhiLeft->PhiLeft == NULL)
 	{
 		return dxPlusPhi(inputPhi);
 	}
@@ -376,9 +381,9 @@ double wenoApproximationXPlus(Phi2D* inputPhi)
 
 	double eps = 1e-6;
 
-	double a1 = 1.0/10.0 * 1.0/((eps + s1)*(eps + s1));
-	double a2 = 6.0/10.0 * 1.0/((eps + s2)*(eps + s2));
-	double a3 = 3.0/10.0 * 1.0/((eps + s3)*(eps + s3));
+	double a1 = 1.0/10.0 * 1.0/((DBL_EPSILON + s1)*(DBL_EPSILON + s1));
+	double a2 = 6.0/10.0 * 1.0/((DBL_EPSILON + s2)*(DBL_EPSILON + s2));
+	double a3 = 3.0/10.0 * 1.0/((DBL_EPSILON + s3)*(DBL_EPSILON + s3));
 	double w1 = a1/(a1+a2+a3);
 	double w2 = a2/(a1+a2+a3);
 	double w3 = a3/(a1+a2+a3);
@@ -391,7 +396,7 @@ double wenoApproximationYMinus(Phi2D* inputPhi)
 {
 	double v1; double v2; double v3; double v4; double v5;
 
-	if (inputPhi == NULL || inputPhi->PhiTop == NULL || inputPhi->PhiTop->PhiTop || inputPhi->PhiBottom == NULL || inputPhi->PhiBottom->PhiBottom == NULL || inputPhi->PhiBottom->PhiBottom->PhiBottom == NULL)
+	if (inputPhi == NULL || inputPhi->PhiTop == NULL || inputPhi->PhiTop->PhiTop == NULL || inputPhi->PhiBottom == NULL || inputPhi->PhiBottom->PhiBottom == NULL || inputPhi->PhiBottom->PhiBottom->PhiBottom == NULL)
 	{
 		return dyMinusPhi(inputPhi);
 	}
@@ -408,9 +413,9 @@ double wenoApproximationYMinus(Phi2D* inputPhi)
 
 	double eps = 1e-6;
 
-	double a1 = 1.0/10.0 * 1.0/((eps + s1)*(eps + s1));
-	double a2 = 6.0/10.0 * 1.0/((eps + s2)*(eps + s2));
-	double a3 = 3.0/10.0 * 1.0/((eps + s3)*(eps + s3));
+	double a1 = 1.0/10.0 * 1.0/((DBL_EPSILON + s1)*(DBL_EPSILON + s1));
+	double a2 = 6.0/10.0 * 1.0/((DBL_EPSILON + s2)*(DBL_EPSILON + s2));
+	double a3 = 3.0/10.0 * 1.0/((DBL_EPSILON + s3)*(DBL_EPSILON + s3));
 	double w1 = a1/(a1+a2+a3);
 	double w2 = a2/(a1+a2+a3);
 	double w3 = a3/(a1+a2+a3);
@@ -423,7 +428,7 @@ double wenoApproximationYPlus(Phi2D* inputPhi)
 {
 	double v1; double v2; double v3; double v4; double v5;
 
-	if (inputPhi == NULL || inputPhi->PhiTop == NULL || inputPhi->PhiTop->PhiTop || inputPhi->PhiTop->PhiTop->PhiTop == NULL || inputPhi->PhiBottom == NULL || inputPhi->PhiBottom->PhiBottom == NULL)
+	if (inputPhi == NULL || inputPhi->PhiTop == NULL || inputPhi->PhiTop->PhiTop == NULL || inputPhi->PhiTop->PhiTop->PhiTop == NULL || inputPhi->PhiBottom == NULL || inputPhi->PhiBottom->PhiBottom == NULL)
 	{
 		return dyPlusPhi(inputPhi);
 	}
@@ -440,12 +445,57 @@ double wenoApproximationYPlus(Phi2D* inputPhi)
 
 	double eps = 1e-6;
 
-	double a1 = 1.0/10.0 * 1.0/((eps + s1)*(eps + s1));
-	double a2 = 6.0/10.0 * 1.0/((eps + s2)*(eps + s2));
-	double a3 = 3.0/10.0 * 1.0/((eps + s3)*(eps + s3));
+	double a1 = 1.0/10.0 * 1.0/((DBL_EPSILON + s1)*(DBL_EPSILON + s1));
+	double a2 = 6.0/10.0 * 1.0/((DBL_EPSILON + s2)*(DBL_EPSILON + s2));
+	double a3 = 3.0/10.0 * 1.0/((DBL_EPSILON + s3)*(DBL_EPSILON + s3));
 	double w1 = a1/(a1+a2+a3);
 	double w2 = a2/(a1+a2+a3);
 	double w3 = a3/(a1+a2+a3);
 
 	return w1*(1.0/3.0*v1-7.0/6.0*v2+11.0/6.0*v3) + w2*(-1.0/6.0*v2+5.0/6.0*v3+1.0/3.0*v4) + w3*(1.0/3.0*v3+5.0/6.0*v4-1.0/6.0*v5);
+}
+
+
+double reinitialGodonov(double a, double b, double	c, double d, double inputPhi)
+{
+	if (inputPhi<=0)
+	{
+		double aPlus  = max(a,0.0);
+		double bMinus = min(b,0.0);
+		double cPlus  = max(c,0.0);
+		double dMinus = min(d,0.0);
+
+		return sqrt(max(aPlus*aPlus, bMinus*bMinus) + max(cPlus*cPlus, dMinus*dMinus))-1.0;
+	}
+	else
+	{
+		double aMinus = min(a,0.0);
+		double bPlus  = max(b,0.0);
+		double cMinus = min(c,0.0);
+		double dPlus  = max(d,0.0);
+
+		return sqrt(max(aMinus*aMinus, bPlus*bPlus) + max(cMinus*cMinus, dPlus*dPlus))-1.0;
+	}
+}
+
+double propagatingGodonov(double a, double b, double	c, double d, double inputPhi)
+{
+	if (inputPhi<=0)
+	{
+		double aPlus  = max(a,0.0);
+		double bMinus = min(b,0.0);
+		double cPlus  = max(c,0.0);
+		double dMinus = min(d,0.0);
+
+		return sqrt(max(aPlus*aPlus, bMinus*bMinus) + max(cPlus*cPlus, dMinus*dMinus));
+	}
+	else
+	{
+		double aMinus = min(a,0.0);
+		double bPlus  = max(b,0.0);
+		double cMinus = min(c,0.0);
+		double dPlus  = max(d,0.0);
+
+		return sqrt(max(aMinus*aMinus, bPlus*bPlus) + max(cMinus*cMinus, dPlus*dPlus));
+	}
 }
