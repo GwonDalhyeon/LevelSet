@@ -53,6 +53,31 @@ void deleteAllPhi(Phi2D* inputPhi)
 }
 
 
+struct ZeroLevelSetPoint
+{
+	double x,y;
+
+	ZeroLevelSetPoint* PointBefore;
+	ZeroLevelSetPoint* PointNext;
+	
+	ZeroLevelSetPoint();
+};
+
+ZeroLevelSetPoint::ZeroLevelSetPoint()
+{
+	PointBefore = NULL;
+	PointNext   = NULL;
+}
+
+void deleteAllZeroLevelSetPoint(ZeroLevelSetPoint* inputPoint)
+{
+	if (inputPoint != NULL)
+	{
+		deleteAllZeroLevelSetPoint(inputPoint->PointNext);
+		delete inputPoint;
+	}
+}
+
 
 struct Cell2D
 {
@@ -107,3 +132,6 @@ void deleteAllCell(Cell2D* inputCell)
 		delete inputCell;
 	}
 }
+
+
+

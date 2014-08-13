@@ -6,6 +6,8 @@ struct Particle2D
 	double x1, y1;
 	double radius;
 
+	double normalX, normalY;
+
 	double phi0;
 	double phi1;
 	double tempPhiValue;
@@ -24,7 +26,7 @@ struct Particle2D
 	//struct Particle2D* PhiTop;
 	//struct Particle2D* PhiBottom;
 
-	Cell2D* containdCell;
+	Cell2D* containedCell;
 
 	Particle2D* ParticleNext;
 	Particle2D* ParticleBefore;

@@ -145,7 +145,7 @@ void Shape2D::example3LaxFriedrichs()
 	double tempDxMinusPhi;
 	double tempDyPlusPhi;
 	double tempDyMinusPhi;
-	double velocity;
+	//double velocity;
 	while (tempPhi!=NULL)
 	{
 		tempPhi->originPhi = tempPhi->phi;
@@ -279,31 +279,61 @@ void Shape2D::singleVortex()
 void Shape2D::singleVortexParticle()
 {
 	Particle2D* tempParticle = ParticleHead;
+	double xCoord, yCoord;
 
 	while (tempParticle!=NULL)
 	{
-		interpolationParticleVelocity(tempParticle);
+		xCoord = tempParticle->x0;
+		yCoord = tempParticle->y0;
 
-		tempParticle->kx1 = -tempParticle->xVelocity*deltaT;
-		tempParticle->ky1 = -tempParticle->yVelocity*deltaT;
+		if (xCoord<X0 || xCoord >X1 || yCoord<Y0 || yCoord >Y1)
+		{
+			tempParticle = tempParticle->ParticleNext;
+			deleteParticle(tempParticle->ParticleBefore);
+			continue;
+		}
+		//findCellContainingParticle(tempParticle, CellHead);
+		//interpolationParticleVelocity(tempParticle);
+		
+
+		tempParticle->kx1 = tempParticle->xVelocity*deltaT;
+		tempParticle->ky1 = tempParticle->yVelocity*deltaT;
 
 		tempParticle->x1 = tempParticle->x0 + tempParticle->kx1;
 		tempParticle->y1 = tempParticle->y0 + tempParticle->ky1;
 
+		tempParticle->x0 = tempParticle->x1;
+		tempParticle->y0 = tempParticle->y1;
 
-		tempParticle->kx2 = -tempParticle->xVelocity*deltaT;
-		tempParticle->ky2 = -tempParticle->yVelocity*deltaT;
+		findCellContainingParticle(tempParticle, CellHead);
+		interpolationParticleVelocity(tempParticle);
 
-		tempParticle->x1 = tempParticle->x1 + tempParticle->kx2;
-		tempParticle->y1 = tempParticle->y1 + tempParticle->ky2;
+		tempParticle->kx2 = tempParticle->xVelocity*deltaT;
+		tempParticle->ky2 = tempParticle->yVelocity*deltaT;
 
-		tempParticle->kx3 = -tempParticle->xVelocity*deltaT;
-		tempParticle->ky3 = -tempParticle->yVelocity*deltaT;
+		tempParticle->x1 = 3.0/4.0*xCoord + 1.0/4.0*tempParticle->x1 + 1.0/4.0*tempParticle->kx2;
+		tempParticle->y1 = 3.0/4.0*yCoord + 1.0/4.0*tempParticle->y1 + 1.0/4.0*tempParticle->ky2;
 
-		tempParticle->x0 = 1.0/3.0*tempParticle->x0 + 2.0/3.0*tempParticle->x1 + 2.0/3.0*tempParticle->kx3;
-		tempParticle->y0 = 1.0/3.0*tempParticle->y0 + 2.0/3.0*tempParticle->y1 + 2.0/3.0*tempParticle->ky3;
+		tempParticle->x0 = tempParticle->x1;
+		tempParticle->y0 = tempParticle->y1;
+
+		findCellContainingParticle(tempParticle, CellHead);
+		interpolationParticleVelocity(tempParticle);
+
+		tempParticle->kx3 = tempParticle->xVelocity*deltaT;
+		tempParticle->ky3 = tempParticle->yVelocity*deltaT;
+
+		tempParticle->x0 = 1.0/3.0*xCoord + 2.0/3.0*tempParticle->x1 + 2.0/3.0*tempParticle->kx3;
+		tempParticle->y0 = 1.0/3.0*yCoord + 2.0/3.0*tempParticle->y1 + 2.0/3.0*tempParticle->ky3;
+
+		findCellContainingParticle(tempParticle, CellHead);
+		interpolationParticleVelocity(tempParticle);
+
+
+		interpolationParticlePhi(tempParticle);
 
 		tempParticle = tempParticle->ParticleNext;
+
 	}
 }
 

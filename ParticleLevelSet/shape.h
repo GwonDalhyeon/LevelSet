@@ -16,6 +16,9 @@ public:
 	Phi2D* PhiHead;
 	Phi2D* PhiTail;
 
+	ZeroLevelSetPoint* ZeroLevelSetPointHead;
+	ZeroLevelSetPoint* ZeroLevelSetPointTail;
+
 	Cell2D* CellHead;
 	Cell2D* CellTail;
 	double cellLevel;
@@ -23,6 +26,8 @@ public:
 	Particle2D* ParticleHead;
 	Particle2D* ParticleTail;
 
+	double bandMin, bandMax;
+	double radiusMin, radiusMax;
 
 
 	double** savedPhi;
@@ -57,7 +62,10 @@ public:
 	void interpolationParticleVelocity(Particle2D* inputParticle);
 	void deleteParticle(Particle2D* inputParticle);
 	void sprinkleParticle(Cell2D* inputCell);
-	void findCellContainingParticle(Particle2D* inputParicle);
+	void findCellContainingParticle(Particle2D* inputParicle, Cell2D* inputCell);
+	void attractingParticle(Particle2D* inputParticle);
+	void particleNormalVector(Particle2D* inputParticle);
+	void particleRadius(Particle2D* inputParticle);
 
 	void reinitialTVDRK3();
 	void propagatingTVDRK3();
@@ -116,11 +124,20 @@ Shape2D::Shape2D(double inputX0, double inputX1, int inputXPointNum, double inpu
 	PhiHead->yIndex = 0;
 	PhiTail    = NULL;
 
+	ZeroLevelSetPointHead = NULL;
+	ZeroLevelSetPointTail = NULL;
+
 	CellHead = NULL;
 	CellTail = NULL;
 
 	ParticleHead = NULL;
 	ParticleTail = NULL;
+
+	bandMin = 0.1*min(deltaX, deltaY);
+	bandMax = 3.0*max(deltaX, deltaY);
+
+	radiusMin = 0.1*min(deltaX, deltaY);
+	radiusMax = 0.5*min(deltaX, deltaY);
 }
 
 
@@ -169,11 +186,20 @@ Shape2D::Shape2D(double inputX0, double inputX1, double inputDeltaX, double inpu
 	PhiHead->yIndex = 0;
 	PhiTail    = NULL;
 
+	ZeroLevelSetPointHead = NULL;
+	ZeroLevelSetPointTail = NULL;
+
 	CellHead = NULL;
 	CellTail = NULL;
 
 	ParticleHead = NULL;
 	ParticleTail = NULL;
+
+	bandMin = 0.1*min(deltaX, deltaY);
+	bandMax = 3.0*max(deltaX, deltaY);
+
+	radiusMin = 0.1*min(deltaX, deltaY);
+	radiusMax = 0.5*min(deltaX, deltaY);
 }
 
 Shape2D::Shape2D(double inputX0, double inputX1, double inputY0, double inputY1, double inputLevel, double inputT, double inputdeltaT)
@@ -221,12 +247,21 @@ Shape2D::Shape2D(double inputX0, double inputX1, double inputY0, double inputY1,
 	PhiHead->yIndex = 0;
 	PhiTail    = NULL;
 
+	ZeroLevelSetPointHead = NULL;
+	ZeroLevelSetPointTail = NULL;
+
 	CellHead = NULL;
 	CellTail = NULL;
 	cellLevel = inputLevel;
 
 	ParticleHead = NULL;
 	ParticleTail = NULL;
+
+	bandMin = 0.1*min(deltaX, deltaY);
+	bandMax = 3.0*max(deltaX, deltaY);
+
+	radiusMin = 0.1*min(deltaX, deltaY);
+	radiusMax = 0.5*min(deltaX, deltaY);
 }
 
 
@@ -235,6 +270,11 @@ Shape2D::~Shape2D()
 	if (PhiHead != NULL)
 	{
 		deleteAllPhi(PhiTail);
+	}
+
+	if (ZeroLevelSetPointHead != NULL)
+	{
+		deleteAllZeroLevelSetPoint(ZeroLevelSetPointHead);
 	}
 
 	if (ParticleHead != NULL)

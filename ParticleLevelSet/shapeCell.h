@@ -136,7 +136,7 @@ void Shape2D::combiningCellPhi(Cell2D* inputCell, double inputLevel)
 
 
 
-	Cell2D* newLeftBottomCell  = addCell(inputCell->PhiLeftBottom, newRightCenterPhi, newLeftCenterPhi,newCenterPhi, inputLevel + 1.0);
+	Cell2D* newLeftBottomCell  = addCell(inputCell->PhiLeftBottom, newBottomCenterPhi, newLeftCenterPhi,newCenterPhi, inputLevel + 1.0);
 	Cell2D* newRightBottomcell = addCell(newBottomCenterPhi, inputCell->PhiRightBottom, newCenterPhi, newRightCenterPhi, inputLevel + 1.0);
 	Cell2D* newLeftTopCell     = addCell(newLeftCenterPhi, newCenterPhi, inputCell->PhiLeftTop, newTopCenterPhi, inputLevel + 1.0);
 	Cell2D* newRightTopCell    = addCell(newCenterPhi, newRightCenterPhi, newTopCenterPhi, inputCell->PhiRightTop, inputLevel + 1.0);

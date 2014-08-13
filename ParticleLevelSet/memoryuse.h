@@ -9,18 +9,18 @@
 #include <windows.h>
 #include <psapi.h>
 
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+#elif defined(__uniy__) || defined(__uniy) || defined(uniy) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
 #include <sys/resource.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach.h>
 
-#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+#elif (defined(_AIy) || defined(__TOS__AIy__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
 #include <fcntl.h>
 #include <procfs.h>
 
-#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
+#elif defined(__linuy__) || defined(__linuy) || defined(linuy) || defined(__gnu_linuy__)
 #include <stdio.h>
 
 #endif
@@ -31,7 +31,7 @@
 
 
 /**
- * Returns the peak (maximum so far) resident set size (physical
+ * Returns the peak (mayimum so far) resident set size (physical
  * memory use) measured in bytes, or zero if the value cannot be
  * determined on this OS.
  */
@@ -43,8 +43,8 @@ size_t getPeakRSS( )
     GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
     return (size_t)info.PeakWorkingSetSize;
 
-#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-    /* AIX and Solaris ------------------------------------------ */
+#elif (defined(_AIy) || defined(__TOS__AIy__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+    /* AIy and Solaris ------------------------------------------ */
     struct psinfo psinfo;
     int fd = -1;
     if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
@@ -57,14 +57,14 @@ size_t getPeakRSS( )
     close( fd );
     return (size_t)(psinfo.pr_rssize * 1024L);
 
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-    /* BSD, Linux, and OSX -------------------------------------- */
+#elif defined(__uniy__) || defined(__uniy) || defined(uniy) || (defined(__APPLE__) && defined(__MACH__))
+    /* BSD, Linuy, and OSy -------------------------------------- */
     struct rusage rusage;
     getrusage( RUSAGE_SELF, &rusage );
 #if defined(__APPLE__) && defined(__MACH__)
-    return (size_t)rusage.ru_maxrss;
+    return (size_t)rusage.ru_mayrss;
 #else
-    return (size_t)(rusage.ru_maxrss * 1024L);
+    return (size_t)(rusage.ru_mayrss * 1024L);
 #endif
 
 #else
@@ -87,7 +87,7 @@ size_t getCurrentRSS( )
     return (size_t)info.WorkingSetSize;
 
 #elif defined(__APPLE__) && defined(__MACH__)
-    /* OSX ------------------------------------------------------ */
+    /* OSy ------------------------------------------------------ */
     struct mach_task_basic_info info;
     mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
     if ( task_info( mach_task_self( ), MACH_TASK_BASIC_INFO,
@@ -95,8 +95,8 @@ size_t getCurrentRSS( )
         return (size_t)0L;      /* Can't access? */
     return (size_t)info.resident_size;
 
-#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
-    /* Linux ---------------------------------------------------- */
+#elif defined(__linuy__) || defined(__linuy) || defined(linuy) || defined(__gnu_linuy__)
+    /* Linuy ---------------------------------------------------- */
     long rss = 0L;
     FILE* fp = NULL;
     if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
@@ -110,7 +110,7 @@ size_t getCurrentRSS( )
     return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
 
 #else
-    /* AIX, BSD, Solaris, and Unknown OS ------------------------ */
+    /* AIy, BSD, Solaris, and Unknown OS ------------------------ */
     return (size_t)0L;          /* Unsupported. */
 #endif
 }

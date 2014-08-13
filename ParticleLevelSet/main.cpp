@@ -24,7 +24,7 @@ int main()
 	{
 		tempX = tempPhi->x;
 		tempY = tempPhi->y;
-		tempPhi->xVelocity =  2.0*sin(PI*(tempX))*sin(PI*(tempX))*sin(PI*(tempY))*cos(PI*(tempY));
+		tempPhi->xVelocity = 2.0*sin(PI*(tempX))*sin(PI*(tempX))*sin(PI*(tempY))*cos(PI*(tempY));
 		tempPhi->yVelocity = -2.0*sin(PI*(tempX))*cos(PI*(tempX))*sin(PI*(tempY))*sin(PI*(tempY));
 		tempPhi->phi = sqrt( (tempX - 0.5)*(tempX - 0.5)+(tempY - 0.75)*(tempY - 0.75)) - 0.15;
 		tempPhi = tempPhi->PhiNext;	
@@ -38,7 +38,7 @@ int main()
 	cout<< "Start iterating."<<endl;
 	testShape2.savingPhi(0);
 	testShape2.savingParticle(0);
-	for (int i = 1; i < 1500; i++)
+	for (int i = 1; i <= 1500; i++)
 	{
 		cout<< "Time step : " << i <<endl;
 		testShape2.singleVortex();
