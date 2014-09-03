@@ -49,6 +49,12 @@ public:
 	bool findPointBool(Phi2D* phiHead, int inputXIndex, int inputYIndex);
 	void savingPhi(int timeIndex);
 	void indexingPhi(Phi2D* inputPhi);
+	void phiNormalVector(Phi2D* inputPhi, double& phix, double& phiy);
+
+	void addZeroLevelSetPoint(Cell2D* inputCell, int numPositivePhi);
+
+	// About Zero Level Set
+	void findZeroLevelSetPoint(Shape2D* inputShape2D);
 
 	// About Cell
 	Cell2D* addCell(Phi2D* leftBottomPhi, Phi2D* rightBottomPhi, Phi2D* leftTopPhi, Phi2D* RightTopPhi, double inputLevel);
@@ -66,6 +72,7 @@ public:
 	void attractingParticle(Particle2D* inputParticle);
 	void particleNormalVector(Particle2D* inputParticle);
 	void particleRadius(Particle2D* inputParticle);
+	void reductionError();
 
 	void reinitialTVDRK3();
 	void propagatingTVDRK3();

@@ -280,6 +280,7 @@ void Shape2D::singleVortexParticle()
 {
 	Particle2D* tempParticle = ParticleHead;
 	double xCoord, yCoord;
+	//double originPhiValue;
 
 	while (tempParticle!=NULL)
 	{
@@ -294,7 +295,9 @@ void Shape2D::singleVortexParticle()
 		}
 		//findCellContainingParticle(tempParticle, CellHead);
 		//interpolationParticleVelocity(tempParticle);
-		
+
+		tempParticle->phi1 = tempParticle->phi0;
+		//tempParticle->phi1 = originPhiValue;
 
 		tempParticle->kx1 = tempParticle->xVelocity*deltaT;
 		tempParticle->ky1 = tempParticle->yVelocity*deltaT;
@@ -332,8 +335,70 @@ void Shape2D::singleVortexParticle()
 
 		interpolationParticlePhi(tempParticle);
 
-		tempParticle = tempParticle->ParticleNext;
 
+		if (tempParticle->phi0 * tempParticle->phi1 < 0 )
+		{
+			tempParticle->escapedFlag = true;
+		}
+		else
+		{
+			tempParticle->escapedFlag = false;
+		}
+
+		tempParticle = tempParticle->ParticleNext;
+	}
+}
+
+
+
+void Shape2D::reductionError()
+{
+	Phi2D* tempPhi = PhiHead;
+	Particle2D* tempParticle;
+
+	double tempPhiPlus, tempPhiMinus;
+	double phiP;
+
+	while (tempPhi!=NULL)
+	{
+		//if (abs(tempPhi->phi)<bandMax)
+		//{
+			tempPhiPlus  = tempPhi->phi;
+			tempPhiMinus = tempPhi->phi;
+			tempParticle = ParticleHead;
+
+			while (tempParticle!=NULL)
+			{
+				if (tempParticle->escapedFlag)
+				{
+					phiP = sign2(tempParticle->phi0)*(tempParticle->radius - sqrt( (tempParticle->x0 - tempParticle->x0)*(tempParticle->x0 - tempParticle->x0) + (tempParticle->y0 - tempParticle->y0)*(tempParticle->y0 - tempParticle->y0) ));
+
+					if (tempParticle->phi1>0)
+					{
+						tempPhiPlus = max(tempPhiPlus, phiP);
+					}
+					else
+					{
+						tempPhiMinus = min(tempPhiMinus, phiP);
+					}
+				}
+
+				//particleRadius(tempParticle);
+				tempParticle = tempParticle->ParticleNext;
+			}
+
+			if (abs(tempPhiPlus)<=abs(tempPhiMinus))
+			{
+				tempPhi->phi = tempPhiPlus;
+			}
+			else
+			{
+				tempPhi->phi = tempPhiMinus;
+			}
+		//}
+
+
+		tempPhi = tempPhi->PhiNext;
 	}
 }
 

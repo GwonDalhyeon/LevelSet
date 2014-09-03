@@ -13,6 +13,8 @@ struct Particle2D
 	double tempPhiValue;
 	double originPhi;
 
+	bool escapedFlag;
+
 	double xVelocity;
 	double yVelocity;
 	//double velocityField;

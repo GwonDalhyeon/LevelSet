@@ -13,7 +13,7 @@ void Shape2D::savingParticle(int timeIndex)
 	{
 		particleData<<tempParticle->x0<<" "<<tempParticle->y0<< " " << tempParticle->phi0;
 		particleData<<endl;
-
+		particleRadius(tempParticle);
 		tempParticle = tempParticle->ParticleNext;
 	}
 	particleData.close();
@@ -169,6 +169,7 @@ void Shape2D::initializationParticle()
 			{
 				tempCell->particlePlacedFlag = 1;
 				sprinkleParticle(tempCell);
+
 			}
 		}
 		tempCell = tempCell->CellNext;
@@ -205,7 +206,7 @@ void Shape2D::sprinkleParticle(Cell2D* inputCell)
 
 			interpolationParticleVelocity(ParticleHead);
 			interpolationParticlePhi(ParticleHead);
-			//attractingParticle(ParticleHead);
+			attractingParticle(ParticleHead);
 		}
 		else
 		{
@@ -219,7 +220,7 @@ void Shape2D::sprinkleParticle(Cell2D* inputCell)
 
 			interpolationParticleVelocity(newParticle);
 			interpolationParticlePhi(newParticle);
-			//attractingParticle(newParticle);
+			attractingParticle(newParticle);
 
 			if (newParticle !=NULL)
 			{
@@ -237,37 +238,78 @@ void Shape2D::sprinkleParticle(Cell2D* inputCell)
 }
 
 
+void Shape2D::phiNormalVector(Phi2D* inputPhi, double& phix, double& phiy)
+{
+	//double phix, phiy;
+	phix = dxPhi(inputPhi);
+	phiy = dyPhi(inputPhi);
+
+	phix = phix/sqrt(phix*phix + phiy*phiy);
+	phiy = phiy/sqrt(phix*phix + phiy*phiy);
+}
+
 void Shape2D::particleNormalVector(Particle2D* inputParticle)
 {
+	double phix1, phix2, phix3, phix4;
+	double phiy1, phiy2, phiy3, phiy4;
+	double xCoord = inputParticle->x0;
+	double yCoord = inputParticle->y0;
 
+	double tempX0 = inputParticle->containedCell->PhiLeftBottom->x;
+	double tempX1 = inputParticle->containedCell->PhiRightTop->x;
+	double tempY0 = inputParticle->containedCell->PhiLeftBottom->y;
+	double tempY1 = inputParticle->containedCell->PhiRightTop->y;
+
+	phiNormalVector(inputParticle->containedCell->PhiLeftBottom, phix1, phiy1);
+	phiNormalVector(inputParticle->containedCell->PhiLeftTop, phix2, phiy2);
+	phiNormalVector(inputParticle->containedCell->PhiRightBottom, phix3, phiy3);
+	phiNormalVector(inputParticle->containedCell->PhiRightTop, phix4, phiy4);
+
+	double a1 = phix1*(tempX1-xCoord)/(tempX1-tempX0)*(tempY1-yCoord)/(tempY1-tempY0);
+	double a2 = phix2*(tempX1-xCoord)/(tempX1-tempX0)*(yCoord-tempY0)/(tempY1-tempY0);
+	double a3 = phix3*(xCoord-tempX0)/(tempX1-tempX0)*(tempY1-yCoord)/(tempY1-tempY0);
+	double a4 = phix4*(xCoord-tempX0)/(tempX1-tempX0)*(yCoord-tempY0)/(tempY1-tempY0);
+
+	inputParticle->normalX = a1 + a2 + a3 + a4;
+
+	double b1 = phiy1*(tempX1-xCoord)/(tempX1-tempX0)*(tempY1-yCoord)/(tempY1-tempY0);
+	double b2 = phiy2*(tempX1-xCoord)/(tempX1-tempX0)*(yCoord-tempY0)/(tempY1-tempY0);
+	double b3 = phiy3*(xCoord-tempX0)/(tempX1-tempX0)*(tempY1-yCoord)/(tempY1-tempY0);
+	double b4 = phiy4*(xCoord-tempX0)/(tempX1-tempX0)*(yCoord-tempY0)/(tempY1-tempY0);
+
+	inputParticle->normalY = b1 + b2 + b3 + b4;
 }
 
 void Shape2D::attractingParticle(Particle2D* inputParticle)
 {
-	double goalPhi = (double) rand()/RAND_MAX*(bandMax-bandMin)+bandMin;
+	double goalPhi = (double) sign2(inputParticle->phi0)* rand()/RAND_MAX*(bandMax-bandMin)+bandMin;
 	int iterationNum = 0;
 	double lambda = 1.0;
+	//double phix, phiy;
 
 	while (iterationNum < 15)
 	{
+		interpolationParticlePhi(inputParticle);
+		particleRadius(inputParticle);
+
+
+		if (abs(inputParticle->phi0)>bandMin && abs(inputParticle->phi0)<bandMax )
+		{
+			break;
+		}
+
 		particleNormalVector(inputParticle);
 
 		inputParticle->x0 = inputParticle->x0 + lambda*(goalPhi-inputParticle->phi0)*inputParticle->normalX;
 		inputParticle->y0 = inputParticle->y0 + lambda*(goalPhi-inputParticle->phi0)*inputParticle->normalY;
 
-		interpolationParticlePhi(inputParticle);
-
-		if (abs(inputParticle->phi0)>bandMin && abs(inputParticle->phi0)<bandMax )
-		{
-			particleRadius(inputParticle);
-			return;
-		}
+		//interpolationParticlePhi(inputParticle);
 
 		lambda = lambda/2.0;
-		iterationNum +=1;
+		iterationNum += 1;
 	}
 
-	deleteParticle(inputParticle);
+	//deleteParticle(inputParticle);
 	return;
 }
 
@@ -277,7 +319,7 @@ void Shape2D::particleRadius(Particle2D* inputParticle)
 	{
 		inputParticle->radius = radiusMax;
 	}
-	if (abs(inputParticle->phi0)<radiusMin)
+	else if (abs(inputParticle->phi0)<radiusMin)
 	{
 		inputParticle->radius = radiusMin;
 	}

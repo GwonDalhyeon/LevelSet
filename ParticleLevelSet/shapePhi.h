@@ -267,3 +267,149 @@ void Shape2D::indexingPhi(Phi2D* inputPhi)
 	inputPhi->xIndex = floor((inputPhi->x-X0)/deltaX+DBL_EPSILON);
 	inputPhi->yIndex = floor((inputPhi->y-Y0)/deltaY+DBL_EPSILON);
 }
+
+
+void countPositvePhiAroundCell(Cell2D* inputCell, int positvePoint,int bottomZero, int rightZero, int leftZero, int topZero)
+{
+	if (inputCell->PhiLeftBottom->phi * inputCell->PhiRightBottom->phi<0)
+	{
+		bottomZero = 0;
+	}
+	if (inputCell->PhiRightBottom->phi * inputCell->PhiRightTop->phi<0)
+	{
+		rightZero = 0;
+	}
+	if (inputCell->PhiLeftTop->phi * inputCell->PhiRightTop->phi<0)
+	{
+		topZero = 0;
+	}
+	if (inputCell->PhiLeftBottom->phi * inputCell->PhiLeftTop->phi<0)
+	{
+		leftZero = 0;
+	}
+
+	if (inputCell->PhiLeftBottom->phi > 0)
+	{
+		positvePoint = positvePoint + 1;
+
+	}
+	if (inputCell->PhiRightBottom->phi > 0)
+	{
+		positvePoint = positvePoint + 1;
+	}
+	if (inputCell->PhiLeftTop->phi > 0)
+	{
+		positvePoint = positvePoint + 1;
+	}
+	if (inputCell->PhiLeftBottom->phi > 0)
+	{
+		positvePoint = positvePoint + 1;
+	}
+	return;
+}
+
+
+void Shape2D::findZeroLevelSetPoint(Shape2D* inputShape2D)
+{
+	Cell2D* tempCell = CellHead;
+
+	//double tempPhiLeftBottom;
+	//double tempPhiLeftTop;
+	//double tempPhiRightBottom;
+	//double tempPhiRightTop;
+
+	//double zeroBottomSign;
+	//double zeroRightSign;
+	//double zeroLeftSign;
+	//double zeroTopSign;
+
+	//double zeroCenterDiagSign;
+	//double zeroCenteOffDiagSign;
+	int numPositvePoint, bottomZero, rightZero, leftZero, topZero;
+	
+	while (tempCell != NULL)
+	{
+		if ((int) tempCell->CellLevel == (int) cellLevel)
+		{
+			//tempPhiLeftBottom  = tempCell->PhiLeftBottom->phi;
+			//tempPhiLeftTop     = tempCell->PhiLeftTop->phi;
+			//tempPhiRightBottom = tempCell->PhiRightBottom->phi;
+			//tempPhiRightTop    = tempCell->PhiRightTop->phi;
+
+			//zeroBottomSign = tempPhiLeftBottom*tempPhiRightBottom;
+			//zeroRightSign  = tempPhiRightBottom*tempPhiRightTop;
+			//zeroLeftSign   = tempPhiLeftBottom*tempPhiLeftTop;
+			//zeroTopSign    = tempPhiLeftTop*tempPhiRightTop;
+			//zeroCenterDiagSign = tempPhiLeftBottom*tempPhiRightTop;
+			//zeroCenteOffDiagSign = tempPhiLeftTop*tempPhiRightBottom;
+			
+			numPositvePoint = 0;
+			bottomZero = 0;
+			rightZero = 0;
+			leftZero = 0;
+			topZero = 0;
+
+			countPositvePhiAroundCell(tempCell, numPositvePoint, bottomZero, rightZero, leftZero, topZero);
+
+			if (numPositvePoint > 0 && numPositvePoint<4)
+			{
+				addZeroLevelSetPoint(tempCell, numPositvePoint);
+			}
+			
+		}
+
+
+		tempCell = tempCell->CellNext;
+	}
+}
+
+
+void Shape2D::addZeroLevelSetPoint(Cell2D* inputCell, int positivePhi)
+{
+	double tempPhiLeftBottom;
+	double tempPhiLeftTop;
+	double tempPhiRightBottom;
+	double tempPhiRightTop;
+
+	double zeroBottomSign;
+	double zeroRightSign;
+	double zeroLeftSign;
+	double zeroTopSign;
+	double zeroCenterDiagSign;
+	double zeroCenteOffDiagSign;
+
+	tempPhiLeftBottom  = inputCell->PhiLeftBottom->phi;
+	tempPhiLeftTop     = inputCell->PhiLeftTop->phi;
+	tempPhiRightBottom = inputCell->PhiRightBottom->phi;
+	tempPhiRightTop    = inputCell->PhiRightTop->phi;
+
+	zeroBottomSign = tempPhiLeftBottom*tempPhiRightBottom;
+	zeroRightSign  = tempPhiRightBottom*tempPhiRightTop;
+	zeroLeftSign   = tempPhiLeftBottom*tempPhiLeftTop;
+	zeroTopSign    = tempPhiLeftTop*tempPhiRightTop;
+	zeroCenterDiagSign = tempPhiLeftBottom*tempPhiRightTop;
+	zeroCenteOffDiagSign = tempPhiLeftTop*tempPhiRightBottom;
+
+	if (positivePhi == 1)
+	{
+
+	}
+
+
+	if (inputCell->PhiLeftBottom->phi * inputCell->PhiRightBottom->phi<0)
+	{
+		
+	}
+	if (inputCell->PhiRightBottom->phi * inputCell->PhiRightTop->phi<0)
+	{
+		
+	}
+	if (inputCell->PhiLeftTop->phi * inputCell->PhiRightTop->phi<0)
+	{
+		
+	}
+	if (inputCell->PhiLeftBottom->phi * inputCell->PhiLeftTop->phi<0)
+	{
+		
+	}
+}
