@@ -41,18 +41,18 @@ void Shape2D::deleteParticle(Particle2D* inputParticle)
 	if (inputParticle->ParticleBefore == NULL)
 	{
 		ParticleHead = inputParticle->ParticleNext;
-		inputParticle->ParticleNext->ParticleBefore = NULL;
+		ParticleHead->ParticleBefore = NULL;
 		delete inputParticle;
 	}
 	else if (inputParticle->ParticleNext == NULL)
 	{
 		ParticleTail = inputParticle->ParticleBefore;
-		inputParticle->ParticleBefore->ParticleNext = NULL;
+		ParticleTail->ParticleNext = NULL;
 		delete inputParticle;
 	}
 	else if (inputParticle->ParticleBefore != NULL && inputParticle->ParticleNext != NULL)
 	{
-		Particle2D* tempParticle = inputParticle;
+		//Particle2D* tempParticle = inputParticle;
 		inputParticle->ParticleBefore->ParticleNext = inputParticle->ParticleNext;
 		inputParticle->ParticleNext->ParticleBefore = inputParticle->ParticleBefore;
 		delete inputParticle;
@@ -122,7 +122,7 @@ void Shape2D::interpolationParticleVelocity(Particle2D* inputParticle)
 {
 	double xCoord = inputParticle->x0;
 	double yCoord = inputParticle->y0;
-	
+
 	Phi2D* tempLeftBottomPhi  = inputParticle->containedCell->PhiLeftBottom;
 	Phi2D* tempRightBottomPhi = inputParticle->containedCell->PhiRightBottom;
 	Phi2D* tempLeftTopPhi     = inputParticle->containedCell->PhiLeftTop;
@@ -157,7 +157,6 @@ void Shape2D::interpolationParticleVelocity(Particle2D* inputParticle)
 
 void Shape2D::initializationParticle()
 {
-	double particleBandWidth = 3.0*max(deltaX, deltaY);
 	int particlePerDim = 4;
 
 	Cell2D* tempCell = CellHead;
@@ -165,7 +164,7 @@ void Shape2D::initializationParticle()
 	{
 		if ((int)tempCell->CellLevel == cellLevel)
 		{
-			if (abs(tempCell->PhiLeftBottom->phi)<particleBandWidth || abs(tempCell->PhiLeftTop->phi)<particleBandWidth || abs(tempCell->PhiRightBottom->phi)<particleBandWidth || abs(tempCell->PhiRightTop->phi)<particleBandWidth)
+			if (abs(tempCell->PhiLeftBottom->phi)<bandMax || abs(tempCell->PhiLeftTop->phi)<bandMax || abs(tempCell->PhiRightBottom->phi)<bandMax || abs(tempCell->PhiRightTop->phi)<bandMax)
 			{
 				tempCell->particlePlacedFlag = 1;
 				sprinkleParticle(tempCell);
@@ -204,9 +203,10 @@ void Shape2D::sprinkleParticle(Cell2D* inputCell)
 			ParticleTail = ParticleHead;
 			ParticleHead->containedCell = inputCell;
 
-			interpolationParticleVelocity(ParticleHead);
+
 			interpolationParticlePhi(ParticleHead);
 			attractingParticle(ParticleHead);
+			interpolationParticleVelocity(ParticleHead);
 		}
 		else
 		{
@@ -218,10 +218,10 @@ void Shape2D::sprinkleParticle(Cell2D* inputCell)
 
 			newParticle->containedCell = inputCell;
 
-			interpolationParticleVelocity(newParticle);
+
 			interpolationParticlePhi(newParticle);
 			attractingParticle(newParticle);
-
+			interpolationParticleVelocity(newParticle);
 			if (newParticle !=NULL)
 			{
 				Particle2D* oldParticleTail = ParticleTail;
@@ -237,6 +237,53 @@ void Shape2D::sprinkleParticle(Cell2D* inputCell)
 
 }
 
+
+void Shape2D::attractingParticle(Particle2D* inputParticle)
+{
+	double goalPhi = (double) sign2(inputParticle->phi0)* rand()/RAND_MAX*(bandMax-bandMin)+bandMin;
+	int iterationNum = 0;
+	double lambda = 1.0;
+	//double phix, phiy;
+
+	while (iterationNum < 15)
+	{
+		if (abs(inputParticle->phi0)>bandMin && abs(inputParticle->phi0)<bandMax )
+		{
+			break;
+		}
+
+		particleNormalVector(inputParticle);
+
+		inputParticle->x0 = inputParticle->x0 + lambda*(goalPhi-inputParticle->phi0)*inputParticle->normalX;
+		inputParticle->y0 = inputParticle->y0 + lambda*(goalPhi-inputParticle->phi0)*inputParticle->normalY;
+
+		interpolationParticlePhi(inputParticle);
+
+
+		lambda = lambda/2.0;
+		iterationNum += 1;
+	}
+	particleRadius(inputParticle);
+	findCellContainingParticle(inputParticle, CellHead);
+	//deleteParticle(inputParticle);
+	return;
+}
+
+void Shape2D::particleRadius(Particle2D* inputParticle)
+{
+	if (abs(inputParticle->phi0)>radiusMax)
+	{
+		inputParticle->radius = radiusMax;
+	}
+	else if (abs(inputParticle->phi0)<radiusMin)
+	{
+		inputParticle->radius = radiusMin;
+	}
+	else
+	{
+		inputParticle->radius = abs(inputParticle->phi0);
+	}
+}
 
 void Shape2D::phiNormalVector(Phi2D* inputPhi, double& phix, double& phiy)
 {
@@ -280,51 +327,182 @@ void Shape2D::particleNormalVector(Particle2D* inputParticle)
 	inputParticle->normalY = b1 + b2 + b3 + b4;
 }
 
-void Shape2D::attractingParticle(Particle2D* inputParticle)
+
+
+
+void Shape2D::reseedingParticle()
 {
-	double goalPhi = (double) sign2(inputParticle->phi0)* rand()/RAND_MAX*(bandMax-bandMin)+bandMin;
-	int iterationNum = 0;
-	double lambda = 1.0;
-	//double phix, phiy;
+	Cell2D* tempCell = CellHead;
 
-	while (iterationNum < 15)
+	while (tempCell != NULL)
 	{
-		interpolationParticlePhi(inputParticle);
-		particleRadius(inputParticle);
+		tempCell->numContainParticle = 0;
+		tempCell->particleVector.clear();
+		tempCell->containParticleValue.clear();
 
+		tempCell = tempCell->CellNext;
+	}
 
-		if (abs(inputParticle->phi0)>bandMin && abs(inputParticle->phi0)<bandMax )
+	Particle2D* tempParticle = ParticleHead;
+	Particle2D* tempParticle2;
+	double tempValue;
+	while (tempParticle != NULL)
+	{
+		if (abs(tempParticle->phi0)>bandMax)
 		{
-			break;
+			tempParticle2 = tempParticle->ParticleNext;
+			deleteParticle(tempParticle);
+			tempParticle = tempParticle2;
+		}
+		else
+		{
+
+			tempParticle->containedCell->numContainParticle = tempParticle->containedCell->numContainParticle + 1;
+			//tempParticle->containedCell->containParticleAddress[1] = tempParticle;
+			tempParticle->containedCell->particleVector.push_back(tempParticle);
+			tempValue = sign2(tempParticle->phi0)*tempParticle->phi0 - tempParticle->radius;
+			tempParticle->containedCell->containParticleValue.push_back(tempValue);
 		}
 
-		particleNormalVector(inputParticle);
+		if (tempParticle != NULL)
+		{
+			tempParticle = tempParticle->ParticleNext;
+		}
+	}
 
-		inputParticle->x0 = inputParticle->x0 + lambda*(goalPhi-inputParticle->phi0)*inputParticle->normalX;
-		inputParticle->y0 = inputParticle->y0 + lambda*(goalPhi-inputParticle->phi0)*inputParticle->normalY;
 
-		//interpolationParticlePhi(inputParticle);
+	tempCell = CellHead;
+	while (tempCell != NULL)
+	{
+		if (abs(tempCell->PhiLeftBottom->phi)<bandMax || abs(tempCell->PhiLeftTop->phi)<bandMax || abs(tempCell->PhiRightBottom->phi)<bandMax || abs(tempCell->PhiRightTop->phi)<bandMax)
+		{
+			if (tempCell->CellLevel == cellLevel && tempCell->numContainParticle < 16)
+			{
+				sprinkleParticle(tempCell, tempCell->numContainParticle);
+			}
+			else if (tempCell->CellLevel == cellLevel && tempCell->numContainParticle > 16)
+			{
+				pickoutParticle(tempCell, tempCell->numContainParticle);
+			}
+		}
+		tempCell = tempCell->CellNext;
+	}
 
-		lambda = lambda/2.0;
-		iterationNum += 1;
+	tempParticle = ParticleHead;
+	while (tempParticle != NULL)
+	{
+		particleRadius(tempParticle);
+		findCellContainingParticle(tempParticle, CellHead);
+		tempParticle = tempParticle->ParticleNext;
 	}
 
 	//deleteParticle(inputParticle);
 	return;
 }
 
-void Shape2D::particleRadius(Particle2D* inputParticle)
+
+void Shape2D::sprinkleParticle(Cell2D* inputCell, int inputParticleNum)
 {
-	if (abs(inputParticle->phi0)>radiusMax)
+	double tempX0 = inputCell->x0;
+	double tempX1 = inputCell->x1;
+	double tempY0 = inputCell->y0;
+	double tempY1 = inputCell->y1;
+
+	double randX;
+	double randY;
+
+	int particleNum = inputParticleNum;
+
+
+	while (particleNum < 16)
 	{
-		inputParticle->radius = radiusMax;
+		randX = (double) rand()/RAND_MAX*(tempX1- tempX0)+tempX0;
+		randY = (double) rand()/RAND_MAX*(tempY1- tempY0)+tempY0;
+
+		if (ParticleHead == NULL)
+		{
+			ParticleHead = new Particle2D();
+			ParticleHead->x0 = randX;
+			ParticleHead->y0 = randY;
+			ParticleHead->ParticleNext = ParticleTail;
+			ParticleTail = ParticleHead;
+			ParticleHead->containedCell = inputCell;
+
+			interpolationParticlePhi(ParticleHead);
+			attractingParticle(ParticleHead);
+			interpolationParticleVelocity(ParticleHead);
+		}
+		else
+		{
+			Particle2D* newParticle = new Particle2D();
+
+			newParticle->x0 = randX;
+			newParticle->y0 = randY;
+
+			newParticle->containedCell = inputCell;
+
+
+			interpolationParticlePhi(newParticle);
+			attractingParticle(newParticle);
+			interpolationParticleVelocity(newParticle);
+			if (newParticle !=NULL)
+			{
+				Particle2D* oldParticleTail = ParticleTail;
+				oldParticleTail->ParticleNext = newParticle;
+				newParticle->ParticleBefore = oldParticleTail;
+				ParticleTail = newParticle;
+			}
+
+		}
+
+		particleNum = particleNum + 1;
 	}
-	else if (abs(inputParticle->phi0)<radiusMin)
+
+}
+
+void Shape2D::pickoutParticle(Cell2D* inputCell, int inputParticleNum)
+{
+	int* particleRank  = new int [50];
+	int tempRank;
+
+	int particleNum = inputParticleNum;
+	
+	for (int j = 0; j < particleNum; j++)
 	{
-		inputParticle->radius = radiusMin;
+		tempRank = 1;
+
+		for (int i = 0; i < particleNum; i++)
+		{
+			if (inputCell->containParticleValue[j] >= inputCell->containParticleValue[i])
+			{
+				tempRank +=1;
+			}
+		}
+		particleRank[j] = tempRank;
 	}
-	else
+
+	for (int i = 0; i < particleNum; i++)
 	{
-		inputParticle->radius = abs(inputParticle->phi0);
+		if (particleRank[i] > 16)
+		{
+			deleteParticle(inputCell->particleVector[i]);
+		}
+	}
+	
+	delete particleRank;
+	inputCell->particleVector.clear();
+	inputCell->containParticleValue.clear();
+}
+
+
+void Shape2D::adjustRadius()
+{
+	Particle2D* tempParticle = ParticleHead;
+
+	while (tempParticle!=NULL)
+	{
+		attractingParticle(tempParticle);
+		//particleRadius(tempParticle);
+		tempParticle = tempParticle->ParticleNext;
 	}
 }

@@ -336,7 +336,8 @@ void Shape2D::singleVortexParticle()
 		interpolationParticlePhi(tempParticle);
 
 
-		if (tempParticle->phi0 * tempParticle->phi1 < 0 )
+		//if ((abs(tempParticle->phi0) > tempParticle->radius) && (tempParticle->phi0 * tempParticle->phi1 < 0) )
+		if ((tempParticle->phi0 * tempParticle->phi1 < 0) )
 		{
 			tempParticle->escapedFlag = true;
 		}
@@ -357,49 +358,62 @@ void Shape2D::reductionError()
 	Particle2D* tempParticle;
 
 	double tempPhiPlus, tempPhiMinus;
-	double phiP;
+	double phiP1, phiP2;
+
+	double tempPhiX0, tempPhiX1, tempPhiY0, tempPhiY1, tempParticleX, tempParticleY;
 
 	while (tempPhi!=NULL)
 	{
 		//if (abs(tempPhi->phi)<bandMax)
 		//{
-			tempPhiPlus  = tempPhi->phi;
-			tempPhiMinus = tempPhi->phi;
-			tempParticle = ParticleHead;
 
-			while (tempParticle!=NULL)
+		tempPhiPlus  = tempPhi->phi;
+		tempPhiMinus = tempPhi->phi;
+		tempParticle = ParticleHead;
+
+		tempPhiX0 = tempPhi->x;
+		tempPhiY0 = tempPhi->y;
+
+		while (tempParticle!=NULL)
+		{
+			if (tempParticle->escapedFlag)
 			{
-				if (tempParticle->escapedFlag)
+				if (tempParticle->phi1>0)
 				{
-					phiP = sign2(tempParticle->phi0)*(tempParticle->radius - sqrt( (tempParticle->x0 - tempParticle->x0)*(tempParticle->x0 - tempParticle->x0) + (tempParticle->y0 - tempParticle->y0)*(tempParticle->y0 - tempParticle->y0) ));
-
-					if (tempParticle->phi1>0)
-					{
-						tempPhiPlus = max(tempPhiPlus, phiP);
-					}
-					else
-					{
-						tempPhiMinus = min(tempPhiMinus, phiP);
-					}
+					phiP1 = sign2(tempParticle->phi1)*(tempParticle->radius - sqrt( (tempParticle->x0 - tempPhiX0)*(tempParticle->x0 - tempPhiX0) + (tempParticle->y0 - tempPhiY0)*(tempParticle->y0 - tempPhiY0) ));
+					tempPhiPlus = max(tempPhiPlus, phiP1);
 				}
-
-				//particleRadius(tempParticle);
-				tempParticle = tempParticle->ParticleNext;
+				else
+				{
+					phiP2 = sign2(tempParticle->phi1)*(tempParticle->radius - sqrt( (tempParticle->x0 - tempPhiX0)*(tempParticle->x0 - tempPhiX0) + (tempParticle->y0 - tempPhiY0)*(tempParticle->y0 - tempPhiY0) ));
+					tempPhiMinus = min(tempPhiMinus, phiP2);
+				}
 			}
 
-			if (abs(tempPhiPlus)<=abs(tempPhiMinus))
-			{
-				tempPhi->phi = tempPhiPlus;
-			}
-			else
-			{
-				tempPhi->phi = tempPhiMinus;
-			}
+			//particleRadius(tempParticle);
+			tempParticle = tempParticle->ParticleNext;
+		}
+
+		if (abs(tempPhiPlus)<=abs(tempPhiMinus))
+		{
+			tempPhi->phi = tempPhiPlus;
+		}
+		else
+		{
+			tempPhi->phi = tempPhiMinus;
+		}
+		
+			//tempPhi->phi = (tempPhiPlus + tempPhiMinus)/2.0;
+		
+
 		//}
 
 
 		tempPhi = tempPhi->PhiNext;
 	}
 }
+
+
+
 
 

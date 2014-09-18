@@ -17,6 +17,9 @@ Cell2D* Shape2D::addCell(Phi2D* leftBottomPhi, Phi2D* rightBottomPhi, Phi2D* lef
 	returnCell->x1 = RightTopPhi->x;
 	returnCell->y0 = leftBottomPhi->y;
 	returnCell->y1 = RightTopPhi->y;
+	
+
+	returnCell->numContainParticle = 0;
 
 	return returnCell;
 }

@@ -1,4 +1,77 @@
 #include "phi.h"
+#include <vector>
+
+struct Cell2D;
+struct Particle2D;
+
+struct Cell2D
+{
+	Phi2D* PhiLeftBottom;
+	Phi2D* PhiLeftTop;
+	Phi2D* PhiRightBottom;
+	Phi2D* PhiRightTop;
+
+	double x0,x1,y0,y1;
+	double cellLength;
+	double CellLevel;
+
+	Cell2D* CellBefore;
+	Cell2D* CellNext;
+	Cell2D* CellParent;
+	Cell2D* CellChildLeftBottom;
+	Cell2D* CellChildRightBottom;
+	Cell2D* CellChildLeftTop;
+	Cell2D* CellChildRightTop;
+
+	Particle2D* containParticle;
+	vector<Particle2D*> particleVector;
+	vector<double> containParticleValue;
+	
+
+	int numContainParticle;
+	int particlePlacedFlag;
+
+	Cell2D();
+};
+
+Cell2D::Cell2D()
+{
+	PhiLeftBottom  = NULL;
+	PhiLeftTop     = NULL;
+	PhiRightBottom = NULL;
+	PhiRightTop    = NULL;
+
+
+
+	CellBefore = NULL;
+	CellNext   = NULL;
+	CellParent = NULL;
+	CellChildLeftBottom  = NULL;
+	CellChildRightBottom = NULL;
+	CellChildLeftTop     = NULL;
+	CellChildRightTop    = NULL;
+
+	//containParticle = NULL;
+	
+	//containParticleValue = NULL;
+
+	numContainParticle = 0;
+	particlePlacedFlag = 0;
+}
+
+
+void deleteAllCell(Cell2D* inputCell)
+{
+	if (inputCell != NULL)
+	{
+		deleteAllCell(inputCell->CellNext);
+		delete inputCell;
+	}
+}
+
+
+
+
 
 struct Particle2D
 {

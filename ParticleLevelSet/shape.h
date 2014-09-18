@@ -68,11 +68,15 @@ public:
 	void interpolationParticleVelocity(Particle2D* inputParticle);
 	void deleteParticle(Particle2D* inputParticle);
 	void sprinkleParticle(Cell2D* inputCell);
+	void sprinkleParticle(Cell2D* inputCell, int inputParticleNum);
+	void pickoutParticle(Cell2D* inputCell, int inputParticleNum);
 	void findCellContainingParticle(Particle2D* inputParicle, Cell2D* inputCell);
 	void attractingParticle(Particle2D* inputParticle);
 	void particleNormalVector(Particle2D* inputParticle);
 	void particleRadius(Particle2D* inputParticle);
 	void reductionError();
+	void reseedingParticle();
+	void adjustRadius();
 
 	void reinitialTVDRK3();
 	void propagatingTVDRK3();

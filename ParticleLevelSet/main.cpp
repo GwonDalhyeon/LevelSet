@@ -12,7 +12,6 @@ int main()
 	testShape2.combiningCellPhi(NULL,0);
 	testShape2.connectingPhi();
 
-
 	cout<< "Initializing phi."<<endl;
 
 	/////////////////////////////////////
@@ -34,16 +33,17 @@ int main()
 
 	cout<< "Sprinkle particle."<<endl;
 	testShape2.initializationParticle();
-
+	
 	cout<< "Start iterating."<<endl;
 	testShape2.savingPhi(0);
 	testShape2.savingParticle(0);
-	for (int i = 1; i <= 1500; i++)
+	for (int i = 1; i <= 500; i++)
 	{
 		cout<< "Time step : " << i <<endl;
 		testShape2.singleVortex();
 		testShape2.singleVortexParticle();
 		//testShape2.reductionError();
+		testShape2.reseedingParticle();
 
 		//int j=0;
 		//while (j<10)
@@ -60,9 +60,11 @@ int main()
 			while (j<10)
 			{
 				testShape2.reinitialTVDRK3();
+
 				j=j+1;
 			}
-			
+			//testShape2.reductionError();
+			//testShape2.reseedingParticle();
 		}
 	}
 
